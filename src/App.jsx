@@ -997,74 +997,8 @@ function Footer() {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  // ── SEO: title, meta tags, JSON-LD, idioma del documento ──────────────────
-  useEffect(() => {
-    document.documentElement.lang = "es";
-
-    document.title = "Tiey — Búsqueda de talento tech y digital | Headhunting boutique";
-
-    const setMeta = (attr, key, content) => {
-      let el = document.querySelector(`meta[${attr}="${key}"]`);
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(attr, key);
-        document.head.appendChild(el);
-      }
-      el.setAttribute("content", content);
-    };
-
-    setMeta("name", "description",
-      "Tiey es una firma boutique de búsqueda de talento tech y digital. Encontramos a tu próximo CTO, VP of Engineering o líder de producto con un proceso a medida y garantía de 3 meses.");
-    setMeta("name", "keywords",
-      "headhunting tech, búsqueda de talento tech, reclutamiento CTO, executive search digital, recruiting tech España, Tiey");
-    setMeta("name", "robots", "index, follow");
-    setMeta("name", "author", "Tiey");
-
-    // Open Graph
-    setMeta("property", "og:title", "Tiey — Encuentra tu próximo líder tech");
-    setMeta("property", "og:description",
-      "Firma boutique de búsqueda de talento tech y digital. Proceso a medida, sin atajos, con garantía de 3 meses.");
-    setMeta("property", "og:type", "website");
-    setMeta("property", "og:locale", "es_ES");
-
-    // Twitter Card
-    setMeta("name", "twitter:card", "summary_large_image");
-    setMeta("name", "twitter:title", "Tiey — Encuentra tu próximo líder tech");
-    setMeta("name", "twitter:description",
-      "Búsqueda de talento tech y digital con proceso a medida y garantía de 3 meses.");
-
-    // Viewport (por si el host no lo define)
-    setMeta("name", "viewport", "width=device-width, initial-scale=1");
-
-    // Canonical
-    let link = document.querySelector('link[rel="canonical"]');
-    if (!link) {
-      link = document.createElement("link");
-      link.setAttribute("rel", "canonical");
-      document.head.appendChild(link);
-    }
-    link.setAttribute("href", "https://tiey.es/");
-
-    // JSON-LD — ProfessionalService schema
-    let ld = document.querySelector('script[type="application/ld+json"]#tiey-jsonld');
-    if (!ld) {
-      ld = document.createElement("script");
-      ld.type = "application/ld+json";
-      ld.id = "tiey-jsonld";
-      document.head.appendChild(ld);
-    }
-    ld.textContent = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "EmploymentAgency",
-      "name": "Tiey",
-      "description": "Firma boutique de búsqueda de talento tech y digital con proceso a medida y garantía de 3 meses.",
-      "areaServed": "ES",
-      "knowsAbout": ["Reclutamiento tech", "Executive search", "Headhunting digital"],
-      "url": "https://tiey.es/",
-      "email": "hola@tiey.es",
-      "sameAs": []
-    });
-  }, []);
+  // SEO (title, meta tags, OG, JSON-LD) vive en index.html — server-side,
+  // visible para crawlers sin esperar a que cargue React.
 
   return (
     <>
