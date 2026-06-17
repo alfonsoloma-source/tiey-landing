@@ -1,599 +1,595 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 
-// ── Paleta — Cyberpunk dark ────────────────────────────────────────────────────
-const DEEP    = "#05070C";   // fondo base, casi negro con tinte azul
-const DARK    = "#0A0E16";   // secciones alternas
-const CARD    = "#10151F";   // fondo de cards
-const CYAN    = "#00F0FF";   // neón primario
-const ORANGE  = "#FF7A29";   // acento secundario — naranja cálido
-const TEXT    = "#EAF1FF";   // texto principal
-const GRAY    = "#6E7891";   // texto secundario
+// ── Paleta — Editorial boutique ───────────────────────────────────────────────
+const CREAM   = "#FAF8F5";   // fondo base — casi blanco cálido
+const CREAM2  = "#F2EDE6";   // beige muy sutil para secciones alternas
+const INK     = "#1C1C1C";   // casi negro — texto principal y secciones oscuras
+const INK2    = "#2E2E2E";   // gris muy oscuro — cards oscuras
+const CRIMSON = "#C8102E";   // acento carmesí — único color de énfasis
+const SAND    = "#A89880";   // gris arena — texto secundario sobre crema
+const MIST    = "rgba(28,28,28,0.45)";  // texto tenue sobre crema
 const WHITE   = "#FFFFFF";
-const MUTED   = "rgba(234,241,255,0.55)";
-
-// Glows reutilizables
-const glowCyan    = (op=0.35) => `0 0 24px rgba(0,240,255,${op})`;
-const glowOrange  = (op=0.35) => `0 0 24px rgba(255,122,41,${op})`;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function useFadeUp(delay=0) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once:true, margin:"-80px" });
-  return { ref, initial:{opacity:0,y:32}, animate:inView?{opacity:1,y:0}:{opacity:0,y:32},
-    transition:{duration:0.7, ease:[0.22,1,0.36,1], delay} };
+  const inView = useInView(ref, { once:true, margin:"-60px" });
+  return { ref,
+    initial:{ opacity:0, y:24 },
+    animate: inView ? { opacity:1, y:0 } : { opacity:0, y:24 },
+    transition:{ duration:0.75, ease:[0.22,1,0.36,1], delay }
+  };
 }
 
-// Texto que cicla entre palabras con animación de blur + slide + ancho dinámico
-function AnimatedTextCycle({ words, interval=2500, style={} }) {
+// Ciclo de palabras — display serif con transición suave
+function TextCycle({ words, interval=2600 }) {
   const [idx, setIdx] = useState(0);
-  const [width, setWidth] = useState("auto");
-  const measureRef = useRef(null);
-
-  useEffect(() => {
-    if (measureRef.current) {
-      const els = measureRef.current.children;
-      if (els[idx]) setWidth(`${els[idx].getBoundingClientRect().width}px`);
-    }
-  }, [idx]);
-
-  useEffect(() => {
-    const t = setInterval(() => setIdx(i => (i+1) % words.length), interval);
-    return () => clearInterval(t);
-  }, [interval, words.length]);
-
+  useEffect(()=>{ const t=setInterval(()=>setIdx(i=>(i+1)%words.length),interval); return()=>clearInterval(t); },[]);
   return (
-    <>
-      <span ref={measureRef} aria-hidden="true" style={{position:"absolute", visibility:"hidden", display:"flex", pointerEvents:"none"}}>
-        {words.map((w,i)=><span key={i} style={{...style, whiteSpace:"nowrap"}}>{w}</span>)}
-      </span>
-      <motion.span style={{position:"relative", display:"inline-block", overflow:"hidden", verticalAlign:"bottom"}}
-        animate={{ width }} transition={{ type:"spring", stiffness:160, damping:18 }}>
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.span key={idx}
-            initial={{ y:24, opacity:0, filter:"blur(8px)" }}
-            animate={{ y:0, opacity:1, filter:"blur(0px)" }}
-            exit={{ y:-24, opacity:0, filter:"blur(8px)" }}
-            transition={{ duration:0.4, ease:[0.22,1,0.36,1] }}
-            style={{display:"inline-block", whiteSpace:"nowrap", ...style}}>
-            {words[idx]}
-          </motion.span>
-        </AnimatePresence>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.span key={idx}
+        initial={{ opacity:0, y:16, filter:"blur(6px)" }}
+        animate={{ opacity:1, y:0,  filter:"blur(0px)" }}
+        exit={{    opacity:0, y:-16, filter:"blur(6px)" }}
+        transition={{ duration:0.45, ease:[0.22,1,0.36,1] }}
+        style={{ display:"inline-block", color:CRIMSON, fontStyle:"italic" }}>
+        {words[idx]}
       </motion.span>
-    </>
+    </AnimatePresence>
   );
 }
 
-
-// Grid de fondo — patrón cyberpunk
-const GridBG = ({ opacity=0.05 }) => (
-  <div style={{
-    position:"absolute", inset:0, pointerEvents:"none", zIndex:0,
-    backgroundImage:`linear-gradient(rgba(0,240,255,${opacity}) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,${opacity}) 1px, transparent 1px)`,
-    backgroundSize:"48px 48px",
-    maskImage:"radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
-    WebkitMaskImage:"radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
-  }}/>
+// Número de línea marginal — signature element tipográfico
+const LineNo = ({ n, light=false }) => (
+  <span style={{
+    fontFamily:"'Courier New', monospace",
+    fontSize:10, letterSpacing:"0.12em",
+    color: light ? "rgba(255,255,255,0.2)" : "rgba(28,28,28,0.18)",
+    userSelect:"none", display:"block",
+    marginBottom:8,
+  }}>
+    {String(n).padStart(2,"0")} ——
+  </span>
 );
 
-// Spark icon — diamante neón
-const SparkIcon = ({ size=14, color=CYAN }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{filter:`drop-shadow(0 0 4px ${color})`}}>
-    <path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z" />
-  </svg>
+// Divider horizontal fino
+const Rule = ({ light=false, style={} }) => (
+  <div style={{ height:1, background: light ? "rgba(255,255,255,0.12)" : "rgba(28,28,28,0.12)", ...style }}/>
 );
 
-// Pill button — glow neón en hover
-function PillButton({ children, variant="dark", onClick, style={} }) {
+// Botón — dos variantes: primario (crimson sólido) y secundario (outline sobre crema/ink)
+function Btn({ children, variant="primary", onClick, style={} }) {
   const [hov, setHov] = useState(false);
-  const variants = {
-    dark:    { bg: hov?"#161D2C":CARD, color:TEXT, border:`1px solid ${hov?"rgba(0,240,255,0.5)":"rgba(0,240,255,0.18)"}`, iconBg:`linear-gradient(135deg, ${CYAN}, ${ORANGE})`, shadow: hov?glowCyan(0.3):"none" },
-    cyan:    { bg: hov?"#1AF5FF":CYAN, color:DEEP, border:"none", iconBg:"rgba(0,0,0,0.18)", shadow: hov?glowCyan(0.6):glowCyan(0.25) },
-    orange: { bg: hov?"#FF9252":ORANGE, color:WHITE, border:"none", iconBg:"rgba(255,255,255,0.2)", shadow: hov?glowOrange(0.6):glowOrange(0.25) },
-    outline: { bg: hov?"rgba(0,240,255,0.06)":"transparent", color:TEXT, border:`1px solid ${hov?CYAN:"rgba(234,241,255,0.2)"}`, iconBg:"rgba(255,255,255,0.08)", shadow: hov?glowCyan(0.25):"none" },
-  }[variant];
-  return (
-    <button onClick={onClick}
-      onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)}
-      style={{
-        display:"inline-flex", alignItems:"center", gap:14,
-        background:variants.bg, color:variants.color, border:variants.border,
-        borderRadius:9999, padding:"6px 24px 6px 6px",
-        fontFamily:"Manrope, sans-serif", fontWeight:700, fontSize:14,
-        cursor:"pointer", transition:"all 0.25s ease", boxShadow:variants.shadow,
-        ...style,
-      }}>
-      <span style={{
-        width:34, height:34, borderRadius:"50%", background:variants.iconBg,
-        display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0,
-      }}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={variant==="cyan"?DEEP:variant==="dark"?CYAN:WHITE} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M13 6l6 6-6 6"/>
-        </svg>
-      </span>
+  const base = {
+    display:"inline-flex", alignItems:"center", gap:12,
+    fontFamily:"Inter, sans-serif", fontWeight:600, fontSize:12,
+    letterSpacing:"0.12em", textTransform:"uppercase",
+    cursor:"pointer", border:"none", transition:"all 0.22s ease",
+    padding:"14px 32px", ...style,
+  };
+  if (variant==="primary") return (
+    <button onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} onClick={onClick}
+      style={{...base, background:hov?"#a00d24":CRIMSON, color:WHITE,
+        boxShadow: hov?"0 6px 28px rgba(200,16,46,0.35)":"0 3px 16px rgba(200,16,46,0.2)"}}>
       {children}
+      <span style={{fontSize:16,lineHeight:1}}>→</span>
+    </button>
+  );
+  if (variant==="outline-dark") return (
+    <button onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} onClick={onClick}
+      style={{...base, background:hov?"rgba(240,235,225,0.08)":"transparent",
+        color:CREAM, border:`1px solid rgba(240,235,225,${hov?"0.5":"0.22"})`}}>
+      {children}
+      <span style={{fontSize:16,lineHeight:1}}>→</span>
+    </button>
+  );
+  return (
+    <button onMouseEnter={()=>setHov(true)} onMouseLeave={()=>setHov(false)} onClick={onClick}
+      style={{...base, background:"transparent",
+        color: hov?CRIMSON:INK, border:`1px solid ${hov?CRIMSON:"rgba(28,28,28,0.28)"}`,
+        boxShadow: hov?"inset 0 0 0 1px "+CRIMSON:"none"}}>
+      {children}
+      <span style={{fontSize:16,lineHeight:1}}>→</span>
     </button>
   );
 }
 
-// ── Nav — pill flotante, links compactos para que quepan ─────────────────────
-function Nav() {
-  const [open, setOpen] = useState(false);
-  const links = [
-    {label:"Inicio", id:"hero"},
-    {label:"Servicios", id:"servicios"},
-    {label:"Método", id:"metodología"},
-    {label:"Casos", id:"casos"},
-    {label:"Nosotros", id:"sobre"},
-  ];
-  const go = id => { document.getElementById(id)?.scrollIntoView({behavior:"smooth"}); setOpen(false); };
-  return (
-    <motion.nav initial={{y:-40,opacity:0}} animate={{y:0,opacity:1}} transition={{duration:0.6,ease:[0.22,1,0.36,1]}}
-      style={{ position:"fixed", top:16, left:"50%", transform:"translateX(-50%)", zIndex:200,
-        width:"min(1240px, 94%)", display:"flex", alignItems:"center", justifyContent:"space-between",
-        background:"rgba(10,14,22,0.65)", backdropFilter:"blur(16px)", WebkitBackdropFilter:"blur(16px)",
-        border:"1px solid rgba(0,240,255,0.15)", borderRadius:9999, padding:"8px 8px 8px 18px",
-        boxShadow:"0 8px 32px rgba(0,0,0,0.5)", gap:8 }}>
+// ── GeometricSphere — wireframe sphere con parallax de mouse + scroll ────────
+// Port de 21st.dev "Geometric Sphere", paleta editorial crema/carmesí
+// ── InteractiveDots — canvas de puntos reactivos al cursor (Nexus Hero port) ──
+// Los puntos se iluminan y crecen cuando el mouse pasa cerca
+function InteractiveDots() {
+  const canvasRef = useRef(null);
+  const dotsRef = useRef([]);
+  const mouseRef = useRef({ x: null, y: null });
+  const rafRef = useRef(null);
 
-      {/* Logo */}
-      <button onClick={()=>go("hero")} style={{background:"none",border:"none",cursor:"pointer",padding:0,display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-        <span style={{
-          width:32, height:32, borderRadius:9, background:`linear-gradient(135deg, ${CYAN}, ${ORANGE})`,
-          display:"flex", alignItems:"center", justifyContent:"center", boxShadow:glowCyan(0.4),
-        }}>
-          <span style={{fontFamily:"Manrope, sans-serif", fontWeight:800, fontSize:16, color:DEEP}}>T</span>
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const DOT_SPACING = 28;
+    const BASE_R = 1.2;
+    const INTERACTION_R = 130;
+    const OPACITY_BASE_MIN = 0.18;
+    const OPACITY_BASE_MAX = 0.32;
+
+    const resize = () => {
+      const parent = canvas.parentElement;
+      canvas.width  = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+      buildDots();
+    };
+
+    const buildDots = () => {
+      const dots = [];
+      const cols = Math.ceil(canvas.width  / DOT_SPACING);
+      const rows = Math.ceil(canvas.height / DOT_SPACING);
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          const base = OPACITY_BASE_MIN + Math.random() * (OPACITY_BASE_MAX - OPACITY_BASE_MIN);
+          dots.push({
+            x: i * DOT_SPACING + DOT_SPACING / 2,
+            y: j * DOT_SPACING + DOT_SPACING / 2,
+            opacity: base,
+            target:  base,
+            speed:   0.002 + Math.random() * 0.004,
+            dir:     1,
+          });
+        }
+      }
+      dotsRef.current = dots;
+    };
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const { x: mx, y: my } = mouseRef.current;
+
+      dotsRef.current.forEach(d => {
+        // gentle breathing
+        d.opacity += d.speed * d.dir;
+        if (d.opacity >= d.target || d.opacity <= OPACITY_BASE_MIN) {
+          d.dir *= -1;
+          d.target = OPACITY_BASE_MIN + Math.random() * (OPACITY_BASE_MAX - OPACITY_BASE_MIN);
+        }
+
+        let factor = 0;
+        let r = BASE_R;
+        if (mx !== null) {
+          const dx = d.x - mx, dy = d.y - my;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < INTERACTION_R) {
+            factor = Math.pow(1 - dist / INTERACTION_R, 2);
+            r = BASE_R + factor * 3.5;
+          }
+        }
+
+        const finalOpacity = Math.min(1, d.opacity + factor * 0.65);
+        // Dots en crema/crimson según intensidad
+        const cr = Math.round(200 * factor + 28 * (1 - factor));
+        const cg = Math.round(16  * factor + 28 * (1 - factor));
+        const cb = Math.round(46  * factor + 28 * (1 - factor));
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(${cr},${cg},${cb},${finalOpacity.toFixed(3)})`;
+        ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      rafRef.current = requestAnimationFrame(draw);
+    };
+
+    resize();
+    window.addEventListener('resize', resize);
+    rafRef.current = requestAnimationFrame(draw);
+
+    const onMove = e => {
+      const rect = canvas.getBoundingClientRect();
+      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    };
+    const onLeave = () => { mouseRef.current = { x: null, y: null }; };
+    document.addEventListener('mousemove', onMove, { passive: true });
+    document.addEventListener('mouseleave', onLeave);
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseleave', onLeave);
+      cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return (
+    <canvas ref={canvasRef} style={{
+      position:"absolute", inset:0, width:"100%", height:"100%",
+      pointerEvents:"none", zIndex:0,
+    }}/>
+  );
+}
+
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(null);
+  useEffect(()=>{ const fn=()=>setScrolled(window.scrollY>40); window.addEventListener("scroll",fn); return()=>window.removeEventListener("scroll",fn); },[]);
+
+  const links = [
+    {label:"Servicios",id:"servicios"},
+    {label:"Proceso",id:"metodología"},
+    {label:"Casos",id:"casos"},
+    {label:"FAQ",id:"faq"},
+    {label:"Nosotros",id:"sobre"},
+  ];
+  const go = id => {
+    setActive(id);
+    document.getElementById(id)?.scrollIntoView({behavior:"smooth"});
+    setOpen(false);
+  };
+
+  return (
+    <nav style={{
+      position:"fixed", top:0, left:0, right:0, zIndex:200, height:64,
+      background: scrolled ? "rgba(250,248,245,0.96)" : "transparent",
+      backdropFilter: scrolled ? "blur(12px)" : "none",
+      borderBottom: scrolled ? `1px solid rgba(28,28,28,0.08)` : "none",
+      transition:"all 0.3s ease",
+      display:"flex", alignItems:"center", justifyContent:"space-between",
+      padding:"0 5%",
+    }}>
+      <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
+        style={{background:"none",border:"none",cursor:"pointer",padding:0}}>
+        <span style={{fontFamily:"'Playfair Display', serif",fontSize:22,fontWeight:700,color:INK,letterSpacing:"0.02em"}}>
+          Tiey<span style={{color:CRIMSON}}>.</span>
         </span>
-        <span style={{fontFamily:"Manrope, sans-serif", fontSize:17, fontWeight:800, color:TEXT, letterSpacing:"-0.02em"}}>tiey</span>
       </button>
 
-      {/* Links — desktop, compactos */}
-      <div style={{display:"flex",gap:1,alignItems:"center",flexShrink:1,minWidth:0}} className="desk-nav">
-        {links.map(({label,id})=>(
-          <button key={id} onClick={()=>go(id)} style={{
-            background:"none", border:"none", color:"rgba(234,241,255,0.6)", fontSize:12.5,
-            fontFamily:"Inter, sans-serif", fontWeight:600, cursor:"pointer", whiteSpace:"nowrap",
-            padding:"8px 10px", borderRadius:9999, transition:"background 0.2s, color 0.2s, text-shadow 0.2s",
-            flexShrink:0,
-          }}
-          onMouseEnter={e=>{e.target.style.background="rgba(0,240,255,0.08)"; e.target.style.color=CYAN; e.target.style.textShadow=`0 0 8px rgba(0,240,255,0.6)`;}}
-          onMouseLeave={e=>{e.target.style.background="none"; e.target.style.color="rgba(234,241,255,0.6)"; e.target.style.textShadow="none";}}
-          >{label}</button>
-        ))}
+      <div style={{display:"flex",gap:4,alignItems:"center"}} className="desk-nav">
+        {links.map(({label,id})=>{
+          const isActive = active === id;
+          return (
+            <button key={id} onClick={()=>go(id)}
+              style={{
+                position:"relative",
+                background:"none", border:"none",
+                color: isActive ? INK : SAND,
+                fontSize:11,
+                fontFamily:"Inter, sans-serif", fontWeight:600,
+                letterSpacing:"0.1em", textTransform:"uppercase",
+                cursor:"pointer", transition:"color 0.2s",
+                padding:"8px 14px", borderRadius:9999,
+              }}
+              onMouseEnter={e=>{ if(!isActive) e.currentTarget.style.color=CRIMSON; }}
+              onMouseLeave={e=>{ if(!isActive) e.currentTarget.style.color=SAND; }}
+            >
+              {label}
+
+              {/* Tubelight effect — solo en el item activo */}
+              {isActive && (
+                <motion.div
+                  layoutId="tubelight"
+                  style={{
+                    position:"absolute", inset:0, borderRadius:9999,
+                    background:"rgba(28,28,28,0.06)",
+                    zIndex:-1,
+                  }}
+                  initial={false}
+                  transition={{ type:"spring", stiffness:300, damping:30 }}
+                >
+                  {/* Barra de luz superior */}
+                  <div style={{
+                    position:"absolute",
+                    top:-1, left:"50%", transform:"translateX(-50%)",
+                    width:32, height:3,
+                    background:CRIMSON,
+                    borderRadius:"0 0 4px 4px",
+                  }}>
+                    {/* Bloom exterior */}
+                    <div style={{
+                      position:"absolute",
+                      width:52, height:14,
+                      background:`rgba(200,16,46,0.2)`,
+                      borderRadius:"50%", filter:"blur(6px)",
+                      top:-4, left:-10, pointerEvents:"none",
+                    }}/>
+                    {/* Bloom medio */}
+                    <div style={{
+                      position:"absolute",
+                      width:32, height:10,
+                      background:`rgba(200,16,46,0.25)`,
+                      borderRadius:"50%", filter:"blur(4px)",
+                      top:-2, left:0, pointerEvents:"none",
+                    }}/>
+                    {/* Hot spot */}
+                    <div style={{
+                      position:"absolute",
+                      width:14, height:6,
+                      background:`rgba(200,16,46,0.45)`,
+                      borderRadius:"50%", filter:"blur(2px)",
+                      top:0, left:9, pointerEvents:"none",
+                    }}/>
+                  </div>
+                </motion.div>
+              )}
+            </button>
+          );
+        })}
+        <Btn variant="primary" onClick={()=>go("contacto")} style={{padding:"10px 24px",fontSize:11}}>
+          Contacto
+        </Btn>
       </div>
 
-      {/* CTA desktop */}
-      <div className="desk-cta" style={{flexShrink:0}}>
-        <PillButton variant="cyan" onClick={()=>go("contacto")}>Contacto</PillButton>
-      </div>
-
-      {/* Burger mobile */}
       <button onClick={()=>setOpen(!open)} className="burger-btn"
-        style={{display:"none",background:CARD,border:`1px solid rgba(0,240,255,0.2)`,borderRadius:9999,width:42,height:42,cursor:"pointer",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:4,flexShrink:0}}>
-        {[0,1,2].map(i=><span key={i} style={{display:"block",width:16,height:2,background:CYAN,borderRadius:2}}/>)}
+        style={{display:"none",background:"none",border:`1px solid rgba(28,28,28,0.2)`,
+          width:40,height:40,cursor:"pointer",alignItems:"center",justifyContent:"center",
+          flexDirection:"column",gap:5,padding:8}}>
+        {[0,1,2].map(i=><span key={i} style={{display:"block",width:18,height:1.5,background:INK}}/>)}
       </button>
 
       <AnimatePresence>
         {open && (
           <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}}
-            style={{position:"absolute",top:60,left:0,right:0,background:"rgba(10,14,22,0.97)",border:`1px solid rgba(0,240,255,0.15)`,borderRadius:24,padding:"16px",
-              display:"flex",flexDirection:"column",gap:4, boxShadow:"0 12px 40px rgba(0,0,0,0.5)", backdropFilter:"blur(16px)"}}>
+            style={{position:"absolute",top:64,left:0,right:0,background:"rgba(250,248,245,0.98)",
+              backdropFilter:"blur(12px)",padding:"20px 5% 28px",display:"flex",flexDirection:"column",
+              gap:4,borderBottom:`1px solid rgba(28,28,28,0.08)`}}>
             {links.map(({label,id})=>(
-              <button key={id} onClick={()=>go(id)} style={{background:"none",border:"none",color:TEXT,fontSize:15,fontWeight:600,fontFamily:"Inter, sans-serif",cursor:"pointer",textAlign:"left",padding:"12px 16px",borderRadius:12}}>{label}</button>
+              <button key={id} onClick={()=>go(id)} style={{background:"none",border:"none",
+                color:INK,fontSize:16,fontWeight:500,fontFamily:"Inter, sans-serif",
+                cursor:"pointer",textAlign:"left",padding:"12px 0",borderBottom:`1px solid rgba(28,28,28,0.06)`}}>
+                {label}
+              </button>
             ))}
-            <div style={{padding:8}}>
-              <PillButton variant="cyan" onClick={()=>go("contacto")} style={{width:"100%",justifyContent:"center"}}>Contacto</PillButton>
+            <div style={{marginTop:16}}>
+              <Btn variant="primary" onClick={()=>go("contacto")}>Contacto</Btn>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </nav>
   );
 }
 
-// ── RotatingGlobe — proyección ortográfica autocontenida (sin fetch / sin d3) ──
-// Genera "continentes" como nubes de puntos deterministas + graticule + rotación.
-function seededRandom(seed) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => (s = (s * 16807) % 2147483647) / 2147483647;
-}
-
-// Centros aproximados de masas continentales (lat, lon en grados) + radio + densidad
-const CONTINENTS = [
-  { lat: 50,  lon: 10,   rx: 22, ry: 14, n: 90  }, // Europa
-  { lat: 30,  lon: 20,   rx: 28, ry: 34, n: 130 }, // África
-  { lat: 50,  lon: 90,   rx: 45, ry: 24, n: 200 }, // Asia
-  { lat: 45,  lon: -100, rx: 28, ry: 26, n: 140 }, // Norteamérica
-  { lat: -15, lon: -60,  rx: 22, ry: 32, n: 110 }, // Sudamérica
-  { lat: -25, lon: 135,  rx: 22, ry: 16, n: 60  }, // Oceanía
-];
-
-function generateGlobeDots() {
-  const rand = seededRandom(42);
-  const dots = [];
-  CONTINENTS.forEach(c => {
-    for (let i = 0; i < c.n; i++) {
-      // Distribución gaussiana aproximada (suma de uniformes)
-      const g1 = (rand()+rand()+rand()-1.5)/1.5;
-      const g2 = (rand()+rand()+rand()-1.5)/1.5;
-      dots.push({
-        lat: Math.max(-85, Math.min(85, c.lat + g1*c.ry)),
-        lon: c.lon + g2*c.rx,
-      });
-    }
-  });
-  return dots;
-}
-
-const GLOBE_DOTS = generateGlobeDots();
-
-function RotatingGlobe({ size = 460 }) {
-  const canvasRef = useRef(null);
-  const rotationRef = useRef({ lon: -20, lat: -15 });
-  const draggingRef = useRef(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
-    ctx.scale(dpr, dpr);
-
-    const cx = size/2, cy = size/2, R = size*0.42;
-    const D2R = Math.PI/180;
-
-    // Proyección ortográfica: devuelve {x,y,visible}
-    function project(latDeg, lonDeg) {
-      const { lon: rotLon, lat: rotLat } = rotationRef.current;
-      const lat = latDeg*D2R, lon = (lonDeg - rotLon)*D2R;
-      const rotLatRad = rotLat*D2R;
-
-      const x = Math.cos(lat) * Math.sin(lon);
-      const y = Math.cos(rotLatRad)*Math.sin(lat) - Math.sin(rotLatRad)*Math.cos(lat)*Math.cos(lon);
-      const z = Math.sin(rotLatRad)*Math.sin(lat) + Math.cos(rotLatRad)*Math.cos(lat)*Math.cos(lon);
-
-      return { x: cx + R*x, y: cy - R*y, visible: z > 0, z };
-    }
-
-    function render() {
-      ctx.clearRect(0,0,size,size);
-
-      // Esfera de fondo
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, Math.PI*2);
-      ctx.fillStyle = DEEP;
-      ctx.fill();
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = "rgba(0,240,255,0.4)";
-      ctx.shadowColor = "rgba(0,240,255,0.6)";
-      ctx.shadowBlur = 14;
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-
-      // Graticule — meridianos y paralelos cada 30°
-      ctx.lineWidth = 0.6;
-      ctx.strokeStyle = "rgba(0,240,255,0.14)";
-      for (let lon=-180; lon<180; lon+=30) {
-        ctx.beginPath();
-        let started = false;
-        for (let lat=-90; lat<=90; lat+=2) {
-          const p = project(lat, lon);
-          if (p.visible) {
-            if (!started) { ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
-          } else started = false;
-        }
-        ctx.stroke();
-      }
-      for (let lat=-60; lat<=60; lat+=30) {
-        ctx.beginPath();
-        let started = false;
-        for (let lon=-180; lon<=180; lon+=2) {
-          const p = project(lat, lon);
-          if (p.visible) {
-            if (!started) { ctx.moveTo(p.x,p.y); started=true; } else ctx.lineTo(p.x,p.y);
-          } else started = false;
-        }
-        ctx.stroke();
-      }
-
-      // Puntos de "continentes"
-      GLOBE_DOTS.forEach(({lat,lon}) => {
-        const p = project(lat, lon);
-        if (p.visible) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 1.4, 0, Math.PI*2);
-          ctx.fillStyle = `rgba(255,122,41,${0.4 + 0.4*p.z})`;
-          ctx.fill();
-        }
-      });
-
-      // Punto de origen — Monterrey, N.L. México (aprox: 25.7°N, -100.3°E)
-      const origin = project(25.7, -100.3);
-      if (origin.visible) {
-        ctx.beginPath();
-        ctx.arc(origin.x, origin.y, 4, 0, Math.PI*2);
-        ctx.fillStyle = CYAN;
-        ctx.shadowColor = CYAN;
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    }
-
-    let raf;
-    function loop() {
-      if (!draggingRef.current) rotationRef.current.lon += 0.18;
-      render();
-      raf = requestAnimationFrame(loop);
-    }
-    loop();
-
-    // Drag para rotar manualmente
-    const onDown = (e) => {
-      draggingRef.current = true;
-      const startX = e.clientX, startY = e.clientY;
-      const start = { ...rotationRef.current };
-      canvas.style.cursor = "grabbing";
-      const onMove = (me) => {
-        rotationRef.current.lon = start.lon + (me.clientX-startX)*0.4;
-        rotationRef.current.lat = Math.max(-80, Math.min(80, start.lat - (me.clientY-startY)*0.4));
-      };
-      const onUp = () => {
-        draggingRef.current = false;
-        canvas.style.cursor = "grab";
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-      };
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("mouseup", onUp);
-    };
-    canvas.addEventListener("mousedown", onDown);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      canvas.removeEventListener("mousedown", onDown);
-    };
-  }, [size]);
-
-  return (
-    <div style={{ position:"relative", width:size, height:size, maxWidth:"100%" }}>
-      <canvas ref={canvasRef} style={{ width:"100%", height:"auto", display:"block", cursor:"grab" }} />
-    </div>
-  );
-}
-
+// ── Hero — oscuro, headline tipo manifesto ────────────────────────────────────
 function Hero() {
   return (
-    <section id="hero" style={{position:"relative", background:DEEP, padding:"140px 5% 0", overflow:"hidden", minHeight:"100vh"}}>
-      <GridBG opacity={0.05}/>
-      <div style={{position:"absolute",top:"5%",right:"5%",width:420,height:420,borderRadius:"50%",background:`radial-gradient(circle, rgba(0,240,255,0.12), transparent 70%)`,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",top:"30%",left:"-5%",width:380,height:380,borderRadius:"50%",background:`radial-gradient(circle, rgba(255,122,41,0.1), transparent 70%)`,pointerEvents:"none"}}/>
+    <section id="hero" style={{
+      background:INK, minHeight:"100vh", position:"relative",
+      display:"flex", flexDirection:"column", justifyContent:"flex-end",
+      padding:"0 5% 72px", overflow:"hidden",
+    }}>
+      <InteractiveDots />
+      {/* Textura de fondo — gradiente sutil */}
+      <div style={{
+        position:"absolute", inset:0,
+        background:`radial-gradient(ellipse 80% 60% at 20% 70%, rgba(200,16,46,0.07) 0%, transparent 60%),
+                   radial-gradient(ellipse 60% 50% at 80% 30%, rgba(200,16,46,0.04) 0%, transparent 60%)`,
+        pointerEvents:"none",
+      }}/>
 
-      <div style={{maxWidth:1280, margin:"0 auto", position:"relative", zIndex:1, display:"grid", gridTemplateColumns:"1.1fr 1fr", gap:40, alignItems:"center", minHeight:"calc(100vh - 140px)"}} className="hero-grid">
+      {/* Número de línea vertical — signature element */}
+      <div style={{
+        position:"absolute", left:"5%", top:"50%", transform:"translateY(-50%) rotate(-90deg)",
+        transformOrigin:"center center",
+        fontFamily:"'Courier New', monospace", fontSize:9, letterSpacing:"0.25em",
+        color:"rgba(255,255,255,0.12)", whiteSpace:"nowrap", pointerEvents:"none",
+      }}>
+        TIEY · BÚSQUEDA DE TALENTO TECH & DIGITAL · MONTERREY, N.L.
+      </div>
 
-        {/* Columna izquierda: copy */}
-        <div>
-          <motion.h1 initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:0.7,delay:0.15}}
-            style={{fontFamily:"Manrope, sans-serif", fontWeight:800, fontSize:"clamp(40px, 5.2vw, 76px)", lineHeight:1.05, letterSpacing:"-0.03em", margin:"0 0 24px", maxWidth:680}}>
-            <span style={{color:TEXT, display:"block"}}>Encuentra tu</span>
-            <span style={{display:"block", color:TEXT}}>
-              próximo{" "}
-              <AnimatedTextCycle
-                words={["líder tech","CTO","VP Engineering","Head of Product","arquitecto cloud","líder de datos"]}
-                interval={2400}
-                style={{
-                  background:`linear-gradient(90deg, ${CYAN}, ${ORANGE})`,
-                  WebkitBackgroundClip:"text", backgroundClip:"text", color:"transparent",
-                  filter:"drop-shadow(0 0 18px rgba(0,240,255,0.25))",
-                  fontWeight:800,
-                }}
-              />
-            </span>
-          </motion.h1>
+      <div style={{maxWidth:1280,margin:"0 auto",width:"100%",position:"relative",zIndex:1}}>
+        <Rule light style={{marginBottom:48}}/>
 
-          <motion.p initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:0.7,delay:0.3}}
-            style={{fontFamily:"Inter, sans-serif", fontSize:15, lineHeight:1.7, color:MUTED, maxWidth:380, marginBottom:36}}>
-            Somos una firma boutique que conecta empresas tech con el talento que necesitan, a través de un proceso a medida y sin atajos.
+        <motion.h1 initial={{opacity:0,y:32}} animate={{opacity:1,y:0}} transition={{duration:0.8,ease:[0.22,1,0.36,1]}}
+          style={{
+            fontFamily:"'Playfair Display', serif",
+            fontWeight:700,
+            fontSize:"clamp(44px, 7.5vw, 108px)",
+            lineHeight:0.95, letterSpacing:"-0.02em",
+            color:WHITE, margin:"0 0 48px",
+            maxWidth:"90%",
+          }}>
+          Encuentra tu<br/>
+          próximo{" "}
+          <TextCycle words={["CTO","líder tech","VP Engineering","Head of Product","arquitecto cloud","líder de datos"]}/>
+        </motion.h1>
+
+        <Rule light style={{marginBottom:48}}/>
+
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:40,alignItems:"end"}} className="hero-bottom">
+          <motion.p initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.8,delay:0.5}}
+            style={{fontFamily:"Inter, sans-serif",fontSize:16,lineHeight:1.8,color:"rgba(255,255,255,0.55)",margin:0,maxWidth:460}}>
+            Somos una firma boutique de búsqueda de talento tech y digital.
+            Proceso a medida, sin atajos, con garantía de 3 meses.
           </motion.p>
-
-          <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:0.7,delay:0.45}}>
-            <PillButton variant="cyan" onClick={()=>document.getElementById("contacto")?.scrollIntoView({behavior:"smooth"})}>Empezar ahora</PillButton>
+          <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{duration:0.8,delay:0.7}}
+            style={{display:"flex",gap:16,justifyContent:"flex-end",flexWrap:"wrap"}}>
+            <Btn variant="primary" onClick={()=>document.getElementById("contacto")?.scrollIntoView({behavior:"smooth"})}>
+              Cuéntanos tu búsqueda
+            </Btn>
+            <Btn variant="outline-dark" onClick={()=>document.getElementById("servicios")?.scrollIntoView({behavior:"smooth"})}>
+              Cómo trabajamos
+            </Btn>
           </motion.div>
         </div>
 
-        {/* Columna derecha: globo */}
-        <motion.div initial={{opacity:0,scale:0.95}} animate={{opacity:1,scale:1}} transition={{duration:1,delay:0.25}}
-          style={{ position:"relative", display:"flex", justifyContent:"center", alignItems:"center" }} className="hero-globe-col">
 
-          <div style={{position:"absolute", width:"110%", height:"110%", borderRadius:"50%", background:`radial-gradient(circle, rgba(0,240,255,0.15), transparent 65%)`, pointerEvents:"none"}}/>
-
-          <RotatingGlobe size={460} />
-        </motion.div>
-      </div>
-
-      {/* Oversized wordmark */}
-      <div style={{
-        position:"relative", marginTop:-40, textAlign:"center", overflow:"hidden",
-        pointerEvents:"none", lineHeight:0.8, zIndex:1,
-      }}>
-        <span style={{
-          fontFamily:"Manrope, sans-serif", fontWeight:800,
-          fontSize:"clamp(120px, 22vw, 320px)", letterSpacing:"-0.04em",
-          color:"transparent",
-          WebkitTextStroke: `1px rgba(0,240,255,0.15)`,
-        }}>tiey</span>
       </div>
     </section>
   );
 }
 
-// ── Servicios — grid asimétrico con neón ──────────────────────────────────────
+// ── Servicios ─────────────────────────────────────────────────────────────────
 const SERVICES = [
-  {
-    tag:"Especialistas",
-    title:"Perfiles digitales",
-    desc:"Product, Diseño, Data, DevOps. Talento que entiende negocio y tecnología a la vez.",
-    bg: `linear-gradient(135deg, #1a0a2e, ${ORANGE} 130%)`, border:"none", accent:WHITE, glow:glowOrange(0.3),
-  },
-  {
-    tag:"Crecimiento",
-    title:"Empresas en crecimiento",
-    desc:"Proceso ágil, shortlist cualificada y visibilidad total — para equipos que escalan rápido.",
-    bg: `linear-gradient(135deg, #0a1f2e, ${CYAN} 140%)`, border:"none", accent:WHITE, glow:glowCyan(0.3),
-  },
-  {
-    tag:"Marca",
-    title:"Employer branding",
-    desc:"Te ayudamos a articular por qué un gran perfil debería elegirte sobre una gran tech.",
-    bg: CARD, border:`1px solid rgba(255,122,41,0.18)`, accent:ORANGE, glow:glowOrange(0.12),
-  },
-  {
-    tag:"Multisector",
-    title:"Mandos medios y gerencias",
-    desc:"Finance Managers, responsables de Operaciones, Ventas, HR y Marketing — los perfiles de mando medio más solicitados, también fuera del mundo tech y digital.",
-    bg: CARD, border:`1px solid rgba(255,122,41,0.18)`, accent:ORANGE, glow:glowOrange(0.12),
-  },
-  {
-    tag:"Innovación",
-    title:"Agentes IA para reclutamiento operativo",
-    desc:"Asistentes de IA que filtran candidaturas, agendan entrevistas y dan seguimiento en procesos de contratación operativa de alto volumen.",
-    bg: `linear-gradient(135deg, #0a1622, ${CYAN}1f 140%)`, border:`1px dashed rgba(0,240,255,0.35)`, accent:CYAN, glow:glowCyan(0.1),
-    note:"* Próximamente",
-  },
+  { n:1, title:"Perfiles tech y digitales", desc:"Product Managers, Engineers, Diseñadores UX/UI, Data Engineers, DevOps. Talento que entiende negocio y tecnología a la vez." },
+  { n:2, title:"Mandos medios multisector", desc:"Finance Managers, Operaciones, Ventas, HR y Marketing. Los perfiles de mando medio más demandados, dentro y fuera del mundo tech." },
+  { n:3, title:"Employer branding", desc:"Te ayudamos a articular por qué un gran perfil debería elegirte. Propuesta de valor honesta y diferenciada para atraer talento." },
+  { n:4, title:"IA Recruiting", desc:"Agentes de IA para procesos de contratación operativa de alto volumen — filtrado, agenda y seguimiento automatizado.", soon:true },
 ];
 
 function Servicios() {
   const fade = useFadeUp();
-  return (
-    <section id="servicios" style={{position:"relative",background:DARK,padding:"100px 5% 120px",overflow:"hidden"}}>
-      <GridBG opacity={0.04}/>
-      <div style={{maxWidth:1280,margin:"0 auto",position:"relative",zIndex:1}}>
+  const [activeIdx, setActiveIdx] = useState(0);
 
-        <motion.div {...fade} style={{textAlign:"center", maxWidth:760, margin:"0 auto 56px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:18}}>
-            <SparkIcon/>
-            <span style={{fontFamily:"'Courier New', monospace",fontSize:12,fontWeight:700,color:CYAN,textTransform:"uppercase",letterSpacing:"0.18em",textShadow:`0 0 8px rgba(0,240,255,0.5)`}}>Servicios</span>
-          </div>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(28px,4vw,46px)",letterSpacing:"-0.02em",lineHeight:1.2,margin:0}}>
-            <span style={{color:TEXT}}>Donde marcamos</span>{" "}
-            <span style={{color:GRAY}}>la diferencia para tu empresa</span>
+  return (
+    <section id="servicios" style={{background:CREAM,padding:"112px 5%"}}>
+      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 2fr",gap:48,alignItems:"center"}} className="sobre-grid">
+
+        {/* Columna izquierda — heading + subtexto */}
+        <motion.div {...fade}>
+          <LineNo n={1}/>
+          <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,3.5vw,52px)",color:INK,margin:"0 0 24px",lineHeight:1.15,letterSpacing:"-0.01em"}}>
+            Donde marcamos<br/>la diferencia
           </h2>
+          <p style={{fontFamily:"Inter, sans-serif",fontSize:15,lineHeight:1.85,color:MIST,margin:0}}>
+            No somos generalistas. Nos especializamos en Tech, Digital y mandos medios con criterio — para que cada búsqueda cuente.
+          </p>
         </motion.div>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(240px, 1fr))",gap:18,alignItems:"stretch"}} className="servicios-grid">
+        {/* Columna derecha — accordion */}
+        <motion.div {...useFadeUp(0.12)}
+          style={{display:"flex",flexDirection:"row",gap:10,height:420,overflow:"hidden"}}
+          className="services-accordion">
           {SERVICES.map((s,i)=>{
-            const f = useFadeUp(i*0.1);
+            const isActive = i === activeIdx;
             return (
-              <motion.div key={s.title} {...f}
+              <div key={s.n}
+                onMouseEnter={()=>setActiveIdx(i)}
                 style={{
-                  position:"relative", borderRadius:28, padding:28,
-                  background:s.bg, border:s.border, minHeight:340,
-                  display:"flex", flexDirection:"column", justifyContent:"space-between",
-                  overflow:"hidden", boxShadow:s.glow,
+                  position:"relative",
+                  height:"100%",
+                  overflow:"hidden",
+                  cursor:"pointer",
+                  flexShrink:0,
+                  width: isActive ? "50%" : "60px",
+                  transition:"width 0.65s cubic-bezier(0.22,1,0.36,1)",
+                  background: INK,
+                  border:"none",
                 }}
-                whileHover={{ y:-6 }} transition={{duration:0.3}}
               >
-                <span style={{
-                  alignSelf:"flex-start", fontFamily:"'Courier New', monospace", fontSize:11, fontWeight:600,
-                  color: s.accent===WHITE ? "rgba(255,255,255,0.9)" : s.accent,
-                  background: s.accent===WHITE ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.04)",
-                  border: s.accent===WHITE ? "none" : `1px solid ${s.accent}33`,
-                  borderRadius:9999, padding:"5px 14px", letterSpacing:"0.05em",
-                }}>{s.tag}</span>
+                {/* Fondo degradado sutil */}
+                <div style={{
+                  position:"absolute", inset:0,
+                  background: isActive
+                    ? `linear-gradient(160deg, rgba(200,16,46,0.08) 0%, rgba(28,28,28,0) 60%)`
+                    : `rgba(28,28,28,0.0)`,
+                  transition:"background 0.5s ease",
+                }}/>
 
-                <div>
-                  <SparkIcon color={s.accent===WHITE?WHITE:s.accent}/>
-                  <h3 style={{fontFamily:"Manrope, sans-serif", fontWeight:800, fontSize:21, color: s.accent===WHITE?WHITE:TEXT, margin:"10px 0 8px", lineHeight:1.2}}>{s.title}</h3>
-                  <p style={{fontFamily:"Inter, sans-serif", fontSize:13.5, lineHeight:1.6, color: s.accent===WHITE?"rgba(255,255,255,0.85)":MUTED, margin:0}}>{s.desc}</p>
-                  {s.note && (
-                    <span style={{display:"inline-block", marginTop:14, fontFamily:"'Courier New', monospace", fontSize:10.5, fontWeight:600, color:CYAN, letterSpacing:"0.05em"}}>{s.note}</span>
-                  )}
+                {/* Número — siempre visible */}
+                <span style={{
+                  position:"absolute",
+                  top:20, left:20,
+                  fontFamily:"'Courier New', monospace",
+                  fontSize:10, letterSpacing:"0.15em",
+                  color: isActive ? CRIMSON : "rgba(255,255,255,0.2)",
+                  transition:"color 0.4s ease",
+                }}>
+                  0{s.n}
+                </span>
+
+                {/* Barra carmesí en el borde izquierdo cuando activo */}
+                <div style={{
+                  position:"absolute",
+                  left:0, top:0, bottom:0,
+                  width: isActive ? 3 : 0,
+                  background:CRIMSON,
+                  transition:"width 0.4s ease",
+                }}/>
+
+                {/* Título + descripción */}
+                <div style={{
+                  position:"absolute",
+                  bottom:24, left:0, right:0,
+                  display:"flex",
+                  alignItems: isActive ? "flex-start" : "center",
+                  justifyContent:"center",
+                  flexDirection:"column",
+                  padding: isActive ? "0 24px" : "0",
+                  transition:"padding 0.4s ease",
+                }}>
+                  <h3 style={{
+                    fontFamily:"'Playfair Display', serif",
+                    fontWeight:700,
+                    fontSize: isActive ? "clamp(17px,1.8vw,22px)" : 13,
+                    color:WHITE,
+                    margin: "0 0 8px",
+                    lineHeight:1.2,
+                    whiteSpace: isActive ? "normal" : "nowrap",
+                    writingMode: isActive ? "horizontal-tb" : "vertical-rl",
+                    transform: isActive ? "none" : "rotate(180deg)",
+                    transition:"all 0.4s ease",
+                    opacity: isActive ? 1 : 0.7,
+                  }}>
+                    {s.title}
+                    {s.soon && isActive && (
+                      <span style={{display:"inline-block",marginLeft:10,fontFamily:"Inter, sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,verticalAlign:"middle",border:`1px solid ${CRIMSON}`,padding:"2px 7px"}}>Próximamente</span>
+                    )}
+                  </h3>
+                  <div style={{
+                    overflow:"hidden",
+                    maxHeight: isActive ? 80 : 0,
+                    opacity: isActive ? 1 : 0,
+                    transition:"max-height 0.5s ease, opacity 0.4s ease",
+                  }}>
+                    <p style={{fontFamily:"Inter, sans-serif",fontSize:13,lineHeight:1.7,color:"rgba(255,255,255,0.55)",margin:0}}>
+                      {s.desc}
+                    </p>
+                  </div>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </div>
+        </motion.div>
+
       </div>
     </section>
   );
 }
-
-// ── Metodología ────────────────────────────────────────────────────────────────
-const METODO_STEPS = [
-  { tag:"01 · Semana 1",  title:"Briefing profundo",       neon:false,
-    desc:"Sesión a fondo para entender el rol, el equipo y la cultura — qué hace que alguien encaje de verdad, más allá del puesto en el papel." },
-  { tag:"02 · Semana 1–2",title:"Mapa de talento",          neon:"cyan",
-    desc:"Activamos nuestra red y mapeamos el mercado pasivo: perfiles que no buscan activamente pero cambiarían por la oportunidad correcta." },
-  { tag:"03 · Semana 2–3",title:"Entrevistas",              neon:false,
-    desc:"Entrevistas estructuradas para validar experiencia técnica, soft skills y fit cultural — filtramos antes de mostrarte nada." },
-  { tag:"04 · Semana 3–4",title:"Shortlist",                neon:false,
-    desc:"Recibes 3 a 5 perfiles con un resumen claro de fortalezas, motivaciones y por qué encajan en tu contexto específico." },
-  { tag:"05 · Semana 4–6",title:"Acompañamiento",           neon:false,
-    desc:"Coordinamos entrevistas, damos feedback a ambas partes y te acompañamos en la negociación de la oferta hasta firmar." },
-  { tag:"06 · Garantía",  title:"3 meses de cobertura",     neon:"orange",
-    desc:"Si algo no funciona en los primeros 3 meses por causas del proceso, repetimos la búsqueda sin coste adicional." },
+// ── Metodología ───────────────────────────────────────────────────────────────
+const STEPS = [
+  { n:"01", tag:"Semana 1",   title:"Briefing profundo",     desc:"Sesión a fondo para entender el rol, el equipo y la cultura — qué hace que alguien encaje de verdad, más allá del puesto." },
+  { n:"02", tag:"Sem. 1–2",   title:"Mapa de talento",       desc:"Activamos nuestra red y mapeamos el mercado pasivo: perfiles que no buscan activamente pero cambiarían por la oportunidad correcta." },
+  { n:"03", tag:"Sem. 2–3",   title:"Entrevistas",           desc:"Entrevistas estructuradas para validar experiencia técnica, soft skills y fit cultural. Filtramos antes de mostrarte nada." },
+  { n:"04", tag:"Sem. 3–4",   title:"Shortlist",             desc:"3 a 5 perfiles con resumen claro de fortalezas, motivaciones y por qué encajan en tu contexto específico." },
+  { n:"05", tag:"Sem. 4–6",   title:"Acompañamiento",        desc:"Coordinamos entrevistas, damos feedback y acompañamos la negociación hasta firmar. No paramos hasta que el candidato empieza." },
+  { n:"06", tag:"Garantía",   title:"3 meses de cobertura",  desc:"Si algo no funciona en los primeros 3 meses por causas del proceso, repetimos la búsqueda sin coste adicional." },
 ];
 
 function Metodologia() {
   const fade = useFadeUp();
   return (
-    <section id="metodología" style={{position:"relative",background:DEEP,padding:"40px 5% 120px",overflow:"hidden"}}>
-      <GridBG opacity={0.04}/>
+    <section id="metodología" style={{background:INK,padding:"112px 5%",position:"relative",overflow:"hidden"}}>
       <div style={{maxWidth:1280,margin:"0 auto",position:"relative",zIndex:1}}>
-        <motion.div {...fade} style={{textAlign:"center", marginBottom:48}}>
-          <div style={{display:"flex",justifyContent:"center",marginBottom:24}}>
-            <span style={{
-              width:48,height:48,borderRadius:"50%",background:CARD, border:`1px solid rgba(0,240,255,0.3)`,
-              display:"flex",alignItems:"center",justifyContent:"center", boxShadow:glowCyan(0.2),
-            }}><SparkIcon size={20} color={CYAN}/></span>
-          </div>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(34px,6vw,68px)",letterSpacing:"-0.03em",lineHeight:1.08,margin:"0 0 24px"}}>
-            <span style={{color:TEXT}}>Cómo trabaja</span><br/>
-            <span style={{color:GRAY}}>nuestro proceso</span>
+        <motion.div {...fade} style={{marginBottom:64}}>
+          <LineNo n={2} light/>
+          <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:WHITE,margin:0,lineHeight:1.15,letterSpacing:"-0.01em"}}>
+            Cómo trabajamos<br/><em style={{color:CRIMSON,fontStyle:"italic"}}>por dentro</em>
           </h2>
-          <div style={{display:"flex",justifyContent:"center",gap:48,flexWrap:"wrap",maxWidth:760,margin:"0 auto"}}>
-            <p style={{fontFamily:"Inter, sans-serif",fontSize:13,lineHeight:1.7,color:GRAY,maxWidth:260,margin:0,textAlign:"left"}}>
-              Un proceso de seis pasos, sin atajos, diseñado para encontrar a la persona correcta — no solo a alguien disponible.
-            </p>
-            <p style={{fontFamily:"Inter, sans-serif",fontSize:13,lineHeight:1.7,color:GRAY,maxWidth:260,margin:0,textAlign:"left"}}>
-              Cada búsqueda lleva nuestro sello: criterio, seguimiento real y una garantía de tres meses sin letra pequeña.
-            </p>
-          </div>
         </motion.div>
 
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(150px, 1fr))",gap:14}} className="metodo-grid">
-          {METODO_STEPS.map((s,i)=>{
-            const f = useFadeUp(i*0.06);
-            const neonColor = s.neon==="cyan"?CYAN : s.neon==="orange"?ORANGE : null;
+        <Rule light/>
+
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:0}}>
+          {STEPS.map((s,i)=>{
+            const f = useFadeUp(i*0.07);
             return (
-              <motion.div key={s.title} {...f}
-                style={{
-                  borderRadius:24, padding:20, minHeight:215,
-                  background: neonColor ? `linear-gradient(135deg, #0a0e16, ${neonColor}22 130%)` : CARD,
-                  border: neonColor ? `1px solid ${neonColor}55` : `1px solid rgba(255,255,255,0.06)`,
-                  boxShadow: neonColor ? (neonColor===CYAN?glowCyan(0.18):glowOrange(0.18)) : "none",
-                  display:"flex", flexDirection:"column", justifyContent:"space-between",
-                  position:"relative", overflow:"hidden",
-                }}
-                whileHover={{ y:-4 }} transition={{duration:0.25}}
-              >
-                <span style={{
-                  alignSelf:"flex-start", fontFamily:"'Courier New', monospace", fontSize:10.5, fontWeight:600,
-                  color: neonColor || GRAY,
-                  background: "rgba(255,255,255,0.04)",
-                  border: `1px solid ${neonColor ? neonColor+"55" : "rgba(255,255,255,0.08)"}`,
-                  borderRadius:9999, padding:"4px 12px",
-                }}>{s.tag}</span>
-                <div>
-                  <h4 style={{fontFamily:"Manrope, sans-serif", fontWeight:800, fontSize:15.5, lineHeight:1.3,
-                    color: TEXT, margin:"0 0 8px"}}>{s.title}</h4>
-                  <p style={{fontFamily:"Inter, sans-serif", fontSize:12, lineHeight:1.6,
-                    color: MUTED, margin:0}}>{s.desc}</p>
+              <motion.div key={s.n} {...f} style={{
+                padding:"36px 28px",
+                borderRight: i%3!==2 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                borderBottom:"1px solid rgba(255,255,255,0.07)",
+              }}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+                  <span style={{fontFamily:"'Courier New', monospace",fontSize:10,color:"rgba(255,255,255,0.25)",letterSpacing:"0.15em"}}>{s.n}</span>
+                  <span style={{fontFamily:"Inter, sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",
+                    color:i===1||i===5?CRIMSON:"rgba(255,255,255,0.25)",
+                    border: i===1||i===5?`1px solid ${CRIMSON}`:"1px solid rgba(255,255,255,0.15)",
+                    padding:"3px 8px"}}>{s.tag}</span>
                 </div>
+                <h3 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:20,color:WHITE,margin:"0 0 12px",lineHeight:1.2}}>{s.title}</h3>
+                <p style={{fontFamily:"Inter, sans-serif",fontSize:13,lineHeight:1.75,color:"rgba(255,255,255,0.45)",margin:0}}>{s.desc}</p>
               </motion.div>
             );
           })}
@@ -603,99 +599,75 @@ function Metodologia() {
   );
 }
 
-// ── Casos / Testimonios — carrusel horizontal ─────────────────────────────────
+// ── Casos / Testimonios ───────────────────────────────────────────────────────
 const TESTIMONIALS = [
-  { name:"Marta Gómez",  role:"CTO · Fintech B2B",      quote:"Nos ayudaron a encontrar a alguien que nadie hubiera encontrado en un portal.", colors:[CYAN, "#0A4D55"] },
-  { name:"Diego Torres", role:"CEO · E-commerce Moda",  quote:"Tres candidatos, los tres valían. Contratamos al primero y sigue tres años después.", colors:[ORANGE, "#5A2A0A"] },
-  { name:"Lucía Fernández", role:"Head of People · SaaS HR", quote:"Con Tiey hablas con quien va a hacer el trabajo, no con un comercial que delega.", colors:["#7C5CFF", "#2A1A5A"] },
-  { name:"Javier Ruiz",  role:"Director · Agencia Digital", quote:"Costaba mucho encontrar talento de diseño. Tiey lo encontró en tres semanas.", colors:[CYAN, ORANGE] },
-  { name:"Sara Molina",  role:"VP Engineering · Insurtech", quote:"En seis semanas teníamos a nuestro Head of Data incorporado. Garantía cumplida.", colors:["#3FE0A5", "#0A4D3A"] },
+  { name:"Marta G.", role:"CTO · Fintech B2B", quote:"Nos ayudaron a encontrar a alguien que nadie hubiera encontrado en un portal. Entendieron perfectamente lo que necesitábamos.", colors:["#8B3A3A","#3A1A1A"] },
+  { name:"Diego T.", role:"CEO · E-commerce Moda", quote:"Tres candidatos en el shortlist, los tres valían. Contratamos al primero y sigue con nosotros tres años después.", colors:["#5A3A2A","#2A1A0A"] },
+  { name:"Lucía F.", role:"Head of People · SaaS HR", quote:"Hablas con quien va a hacer el trabajo, no con un comercial que delega. Eso se nota en el resultado.", colors:["#3A3A5A","#1A1A3A"] },
+  { name:"Javier R.", role:"Director · Agencia Digital", quote:"Nos costaba mucho encontrar talento de diseño. Lo encontraron en tres semanas.", colors:["#3A5A3A","#1A3A1A"] },
+  { name:"Sara M.", role:"VP Engineering · Insurtech", quote:"En seis semanas teníamos a nuestro Head of Data incorporado. Garantía cumplida.", colors:["#5A3A4A","#2A1A2A"] },
 ];
+const getInitials = n => n.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
 
-const getInitials = (name) => name.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
-
-// ── Casos — minimal-testimonial port (21st.dev), recolor cyberpunk ───────────
 function Casos() {
   const fade = useFadeUp();
   const [active, setActive] = useState(0);
-
   return (
-    <section id="casos" style={{position:"relative",background:DARK,padding:"100px 5%",overflow:"hidden"}}>
-      <GridBG opacity={0.04}/>
-      <div style={{maxWidth:1280,margin:"0 auto",position:"relative",zIndex:1}}>
-        <motion.div {...fade} style={{textAlign:"center",marginBottom:64}}>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(28px,4.5vw,52px)",letterSpacing:"-0.02em",color:TEXT,margin:"0 0 12px",lineHeight:1.2}}>
-            Empresas que ya<br/>confían en nosotros
-          </h2>
-          <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:MUTED,maxWidth:480,margin:"0 auto",lineHeight:1.7}}>
-            De fintechs en serie B a agencias digitales — historias reales de equipos que encontraron a la persona correcta.
-          </p>
-        </motion.div>
-
-        <motion.div {...useFadeUp(0.15)} style={{
-          maxWidth:620, margin:"0 auto", borderRadius:28, padding:"48px 40px",
-          background:CARD, border:`1px solid rgba(0,240,255,0.15)`,
-        }}>
-          {/* Quote — cross-fade */}
-          <div style={{position:"relative", minHeight:120, marginBottom:40}}>
-            <AnimatePresence mode="wait">
-              <motion.p key={active}
-                initial={{ opacity:0, y:12, filter:"blur(6px)" }}
-                animate={{ opacity:1, y:0, filter:"blur(0px)" }}
-                exit={{ opacity:0, y:-12, filter:"blur(6px)" }}
-                transition={{ duration:0.45, ease:[0.22,1,0.36,1] }}
-                style={{
-                  fontFamily:"Manrope, sans-serif", fontWeight:500, fontSize:"clamp(19px,2.6vw,26px)",
-                  lineHeight:1.5, color:TEXT, margin:0,
-                }}>
-                "{TESTIMONIALS[active].quote}"
-              </motion.p>
-            </AnimatePresence>
+    <section id="casos" style={{background:CREAM2,padding:"112px 5%"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <motion.div {...fade} style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:64,alignItems:"start",marginBottom:72}} className="sobre-grid">
+          <div>
+            <LineNo n={3}/>
+            <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:0,lineHeight:1.15,letterSpacing:"-0.01em"}}>
+              Empresas que<br/>confían en nosotros
+            </h2>
           </div>
-
-          {/* Author row */}
-          <div style={{display:"flex", alignItems:"center", gap:24, flexWrap:"wrap"}}>
-            {/* Avatar stack */}
-            <div style={{display:"flex"}}>
-              {TESTIMONIALS.map((t,i) => (
-                <button key={t.name} onClick={()=>setActive(i)}
-                  style={{
-                    position:"relative", width:44, height:44, borderRadius:"50%",
-                    overflow:"hidden", border:"none", cursor:"pointer", padding:0,
-                    marginLeft: i===0?0:-12,
-                    zIndex: active===i ? 10 : 1,
-                    transform: active===i ? "scale(1.12)" : "scale(1)",
-                    boxShadow: active===i ? glowCyan(0.5) : "none",
-                    outline: active===i ? `2px solid ${CYAN}` : `2px solid ${DARK}`,
-                    outlineOffset: 0,
-                    filter: active===i ? "none" : "grayscale(1)",
-                    transition:"transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease",
-                  }}>
-                  <div style={{
-                    width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center",
-                    background:`linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})`,
-                    fontFamily:"Manrope, sans-serif", fontWeight:800, fontSize:13, color:WHITE, textShadow:"0 1px 4px rgba(0,0,0,0.4)",
-                  }}>{getInitials(t.name)}</div>
-                </button>
-              ))}
-            </div>
-
-            {/* Divider */}
-            <div style={{height:32, width:1, background:"rgba(255,255,255,0.1)"}} className="testi-divider"/>
-
-            {/* Active author info — cross-fade */}
-            <div style={{position:"relative", flex:1, minHeight:40}}>
+          <div style={{alignSelf:"end"}}>
+            {/* Quote */}
+            <div style={{position:"relative",minHeight:100,marginBottom:32}}>
               <AnimatePresence mode="wait">
-                <motion.div key={active}
-                  initial={{ opacity:0, x:-8 }}
-                  animate={{ opacity:1, x:0 }}
-                  exit={{ opacity:0, x:8 }}
-                  transition={{ duration:0.35, ease:[0.22,1,0.36,1] }}
-                  style={{ display:"flex", flexDirection:"column", justifyContent:"center" }}>
-                  <span style={{fontFamily:"Manrope, sans-serif", fontWeight:800, fontSize:14, color:TEXT}}>{TESTIMONIALS[active].name}</span>
-                  <span style={{fontFamily:"'Courier New', monospace", fontSize:11.5, color:CYAN, marginTop:2}}>{TESTIMONIALS[active].role}</span>
-                </motion.div>
+                <motion.p key={active}
+                  initial={{opacity:0,y:10,filter:"blur(4px)"}}
+                  animate={{opacity:1,y:0,filter:"blur(0px)"}}
+                  exit={{opacity:0,y:-10,filter:"blur(4px)"}}
+                  transition={{duration:0.4,ease:[0.22,1,0.36,1]}}
+                  style={{fontFamily:"'Playfair Display', serif",fontSize:"clamp(18px,2.4vw,28px)",lineHeight:1.5,color:INK,margin:0,fontStyle:"italic"}}>
+                  "{TESTIMONIALS[active].quote}"
+                </motion.p>
               </AnimatePresence>
+            </div>
+            {/* Avatars + info */}
+            <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
+              <div style={{display:"flex"}}>
+                {TESTIMONIALS.map((t,i)=>(
+                  <button key={i} onClick={()=>setActive(i)} style={{
+                    width:40,height:40,borderRadius:"50%",border:"none",cursor:"pointer",
+                    padding:0,marginLeft:i===0?0:-10,
+                    zIndex:active===i?10:1,position:"relative",
+                    transform:active===i?"scale(1.15)":"scale(1)",
+                    outline:active===i?`2px solid ${CRIMSON}`:`2px solid ${CREAM2}`,
+                    outlineOffset:0,
+                    filter:active===i?"none":"grayscale(1) opacity(0.6)",
+                    transition:"all 0.3s ease",
+                    background:`linear-gradient(135deg,${t.colors[0]},${t.colors[1]})`,
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:11,color:WHITE,
+                  }}>
+                    {getInitials(t.name)}
+                  </button>
+                ))}
+              </div>
+              <div style={{width:1,height:28,background:"rgba(28,28,28,0.15)"}} className="testi-divider"/>
+              <div style={{position:"relative",minHeight:36,flex:1}}>
+                <AnimatePresence mode="wait">
+                  <motion.div key={active}
+                    initial={{opacity:0,x:-8}} animate={{opacity:1,x:0}} exit={{opacity:0,x:8}}
+                    transition={{duration:0.3}}>
+                    <div style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:15,color:INK}}>{TESTIMONIALS[active].name}</div>
+                    <div style={{fontFamily:"Inter, sans-serif",fontSize:11,color:CRIMSON,marginTop:2,letterSpacing:"0.04em"}}>{TESTIMONIALS[active].role}</div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -704,236 +676,239 @@ function Casos() {
   );
 }
 
-// ── Sobre Tiey ──────────────────────────────────────────────────────────────────
-function Sobre() {
-  const f1 = useFadeUp(), f2 = useFadeUp(0.15);
-  const stats = [
-    {label:"Especialización", value:"Tech, Digital, Mandos Medios e IA Recruiting",
-      desc:"Desde perfiles técnicos hasta gerencias multisector, integrando IA donde aporta valor real."},
-    {label:"Tipo de empresa", value:"PYMES, Startups y Scale-ups",
-      desc:"Trabajamos principalmente con organizaciones que crecen rápido y necesitan acertar a la primera."},
-    {label:"Fee", value:"1 mes de sueldo bruto + IVA",
-      desc:"Pago único al incorporar — sin retainers ni cuotas mensuales por adelantado."},
-    {label:"Garantía", value:"3 meses de reposición sin coste",
-      desc:"Si la persona no funciona por causas del proceso, repetimos la búsqueda sin cargo extra."},
-  ];
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+const FAQS = [
+  { q:"¿Cuánto cuesta el servicio?", a:"Nuestro fee es de 1 mes de sueldo bruto + IVA, pagado únicamente al contratar. Sin retainer, sin pagos parciales." },
+  { q:"¿Cuánto tarda el proceso?", a:"Normalmente entre 4 y 6 semanas desde el briefing hasta la incorporación, con comunicación constante." },
+  { q:"¿Qué pasa si el candidato no funciona?", a:"Garantía de 3 meses. Si la persona no encaja por causas del proceso, repetimos la búsqueda sin coste adicional." },
+  { q:"¿Solo trabajáis con empresas tech?", a:"Nos especializamos en Tech y Digital, pero también cubrimos mandos medios en Finance, Ops, HR y Ventas." },
+  { q:"¿Trabajáis solo en Monterrey?", a:"Monterrey es nuestra base, pero trabajamos con empresas en toda Latinoamérica y España. La mayoría de los procesos son remotos." },
+  { q:"¿Cómo empezamos?", a:"Completa el formulario o escríbenos a hola@tiey.cc. En menos de 24h te decimos si podemos ayudarte." },
+];
+
+function FAQ() {
+  const fade = useFadeUp();
+  const [open, setOpen] = useState(null);
   return (
-    <section id="sobre" style={{position:"relative",background:DEEP,padding:"100px 5%",overflow:"hidden"}}>
-      <GridBG opacity={0.04}/>
-      <div style={{maxWidth:1280,margin:"0 auto",position:"relative",zIndex:1}}>
-
-        <motion.div {...f1} style={{display:"flex",alignItems:"flex-start",gap:16,marginBottom:32,flexWrap:"wrap"}}>
-          <SparkIcon size={26}/>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(26px,4vw,44px)",letterSpacing:"-0.02em",lineHeight:1.35,color:TEXT,margin:0,maxWidth:880}}>
-            Somos una firma boutique de búsqueda de talento que entrega el rigor de{" "}
-            una consultora grande con la cercanía y rapidez de un{" "}
-            <span style={{color:GRAY}}>equipo pequeño que entiende tu negocio.</span>
-          </h2>
-        </motion.div>
-
-        <motion.p {...useFadeUp(0.1)} style={{fontFamily:"Inter, sans-serif",fontSize:12.5,lineHeight:1.8,color:MUTED,maxWidth:420,marginBottom:64}}>
-          Pocos clientes, atención total. Cada búsqueda tiene un único responsable desde el briefing hasta la incorporación.
-        </motion.p>
-
-        <div style={{display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:18}} className="sobre-grid">
-          <motion.div {...f2} style={{
-            borderRadius:28, padding:36, background:`linear-gradient(135deg, #1a0a2e, ${ORANGE}33 140%)`,
-            border:`1px solid ${ORANGE}55`, boxShadow:glowOrange(0.2),
-            display:"flex", flexDirection:"column", justifyContent:"space-between", minHeight:260,
-          }}>
-            <SparkIcon color={ORANGE} size={20}/>
-            <p style={{fontFamily:"Manrope, sans-serif", fontWeight:700, fontSize:"clamp(18px,2.4vw,28px)", color:WHITE, lineHeight:1.4, margin:"20px 0 0"}}>
-              "El talento excepcional no espera. Nosotros tampoco."
-            </p>
-          </motion.div>
-
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}} className="sobre-stats">
-            {stats.map((s,i)=>{
-              const f = useFadeUp(0.2+i*0.05);
-              return (
-                <motion.div key={s.label} {...f} style={{
-                  borderRadius:24, padding:22, background:CARD, border:`1px solid rgba(0,240,255,0.15)`,
-                  display:"flex", flexDirection:"column", justifyContent:"flex-start", minHeight:160,
-                }}>
-                  <span style={{fontFamily:"'Courier New', monospace",fontSize:10.5,fontWeight:600,color:CYAN,textTransform:"uppercase",letterSpacing:"0.1em"}}>{s.label}</span>
-                  <span style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:15,color:TEXT,lineHeight:1.3,marginTop:10}}>{s.value}</span>
-                  <span style={{fontFamily:"Inter, sans-serif",fontSize:11.5,color:MUTED,lineHeight:1.55,marginTop:8}}>{s.desc}</span>
-                </motion.div>
-              );
-            })}
+    <section id="faq" style={{background:CREAM,padding:"112px 5%"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <motion.div {...fade} style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:64,marginBottom:64}} className="sobre-grid">
+          <div>
+            <LineNo n={4}/>
+            <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:0,lineHeight:1.15}}>
+              Preguntas<br/>frecuentes
+            </h2>
           </div>
+        </motion.div>
+        <div>
+          {FAQS.map((f,i)=>{
+            const fd = useFadeUp(i*0.05);
+            const isOpen = open===i;
+            return (
+              <motion.div key={i} {...fd}>
+                <Rule/>
+                <button onClick={()=>setOpen(isOpen?null:i)}
+                  style={{width:"100%",display:"grid",gridTemplateColumns:"80px 1fr auto",gap:32,
+                    padding:"28px 0",background:"none",border:"none",cursor:"pointer",alignItems:"center",textAlign:"left"}}>
+                  <span style={{fontFamily:"'Courier New', monospace",fontSize:10,color:"rgba(28,28,28,0.22)",letterSpacing:"0.1em"}}>0{i+1}</span>
+                  <span style={{fontFamily:"'Playfair Display', serif",fontWeight:600,fontSize:"clamp(16px,2vw,22px)",color:INK,lineHeight:1.3}}>{f.q}</span>
+                  <span style={{color:isOpen?CRIMSON:SAND,fontSize:20,transition:"transform 0.3s,color 0.2s",
+                    transform:isOpen?"rotate(45deg)":"none"}}>+</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}}
+                      transition={{duration:0.3,ease:[0.22,1,0.36,1]}}>
+                      <p style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.85,color:MIST,
+                        margin:0,padding:"0 0 28px",paddingLeft:"calc(80px + 32px)",maxWidth:600}}>{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+          <Rule/>
         </div>
       </div>
     </section>
   );
 }
 
-// ── Precios ────────────────────────────────────────────────────────────────────
-function Precios() {
-  const fade = useFadeUp();
+// ── Sobre ─────────────────────────────────────────────────────────────────────
+function Sobre() {
+  const f1=useFadeUp(), f2=useFadeUp(0.15);
+  const stats=[
+    {label:"Especialización", value:"Tech, Digital, Mandos Medios e IA Recruiting", desc:"Perfiles técnicos, gerencias multisector e IA donde aporta valor real."},
+    {label:"Tipo de empresa", value:"PYMES, Startups y Scale-ups", desc:"Organizaciones que crecen rápido y necesitan acertar a la primera."},
+    {label:"Fee", value:"1 mes de sueldo bruto + IVA", desc:"Pago único al incorporar — sin retainers ni cuotas por adelantado."},
+    {label:"Garantía", value:"3 meses de reposición", desc:"Si algo falla por causas del proceso, repetimos sin coste extra."},
+  ];
   return (
-    <section id="precios" style={{position:"relative",background:DARK,padding:"100px 5%",overflow:"hidden"}}>
-      <GridBG opacity={0.04}/>
-      <div style={{maxWidth:900,margin:"0 auto",position:"relative",zIndex:1}}>
-        <motion.div {...fade} style={{textAlign:"center",marginBottom:40}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:18}}>
-            <SparkIcon/>
-            <span style={{fontFamily:"'Courier New', monospace",fontSize:12,fontWeight:700,color:CYAN,textTransform:"uppercase",letterSpacing:"0.18em",textShadow:`0 0 8px rgba(0,240,255,0.5)`}}>Precios</span>
-          </div>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(28px,4vw,48px)",letterSpacing:"-0.02em",margin:0}}>
-            <span style={{color:TEXT}}>Un modelo</span>{" "}
-            <span style={{background:`linear-gradient(90deg, ${CYAN}, ${ORANGE})`,WebkitBackgroundClip:"text",backgroundClip:"text",color:"transparent"}}>transparente</span>
+    <section id="sobre" style={{background:INK,padding:"112px 5%",position:"relative",overflow:"hidden"}}>
+      <div style={{maxWidth:1280,margin:"0 auto",position:"relative",zIndex:1}}>
+        <motion.div {...f1} style={{marginBottom:64}}>
+          <LineNo n={5} light/>
+          <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:WHITE,margin:0,lineHeight:1.15,maxWidth:700}}>
+            Una firma boutique.<br/><em style={{color:CRIMSON}}>Un estándar.</em>
           </h2>
         </motion.div>
 
-        <motion.div {...useFadeUp(0.15)} style={{
-          borderRadius:32, padding:"48px 40px", background:CARD,
-          border:`1px solid rgba(0,240,255,0.18)`, boxShadow:glowCyan(0.1),
-          position:"relative", overflow:"hidden",
-        }}>
-          <div style={{position:"absolute",top:-100,right:-100,width:300,height:300,borderRadius:"50%",background:`radial-gradient(circle, rgba(0,240,255,0.12), transparent 70%)`}}/>
-          <div style={{position:"relative",display:"grid",gridTemplateColumns:"1fr auto",gap:40,alignItems:"center"}} className="precio-inner">
+        <Rule light style={{marginBottom:64}}/>
+
+        <div style={{display:"grid",gridTemplateColumns:"1.3fr 1fr",gap:48,alignItems:"start"}} className="sobre-grid">
+          <motion.div {...f1}>
+            {["Tiey nació de una convicción: el mercado de talento tech tiene demasiadas empresas que prometen mucho y entregan poco. Volumen de CVs sin criterio, procesos de semanas sin feedback.",
+              "Operamos de otra manera. Pocos clientes, atención total. Cada búsqueda tiene un único responsable desde el briefing hasta la incorporación.",
+              "Si buscas una firma que entienda que contratar al CTO equivocado puede costarte dos años — y que trate tu proceso con esa responsabilidad — somos tu partner."
+            ].map((p,i)=>(
+              <p key={i} style={{fontFamily:"Inter, sans-serif",fontSize:15,lineHeight:1.9,color:"rgba(255,255,255,0.55)",marginBottom:20}}>{p}</p>
+            ))}
+            <blockquote style={{
+              borderLeft:`3px solid ${CRIMSON}`, paddingLeft:24, margin:"40px 0 0",
+            }}>
+              <p style={{fontFamily:"'Playfair Display', serif",fontStyle:"italic",fontSize:"clamp(18px,2.2vw,26px)",color:WHITE,lineHeight:1.5,margin:0}}>
+                "El talento excepcional no espera. Nosotros tampoco."
+              </p>
+            </blockquote>
+          </motion.div>
+
+          <motion.div {...f2} style={{display:"flex",flexDirection:"column",gap:0}}>
+            {stats.map((s,i)=>(
+              <div key={s.label} style={{padding:"24px 0",borderBottom:"1px solid rgba(255,255,255,0.08)"}}>
+                <span style={{fontFamily:"Inter, sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,display:"block",marginBottom:8}}>{s.label}</span>
+                <span style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:17,color:WHITE,display:"block",lineHeight:1.3,marginBottom:6}}>{s.value}</span>
+                <span style={{fontFamily:"Inter, sans-serif",fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.6}}>{s.desc}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Precios ───────────────────────────────────────────────────────────────────
+function Precios() {
+  const fade = useFadeUp();
+  return (
+    <section id="precios" style={{background:CREAM,padding:"112px 5%"}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <motion.div {...fade} style={{display:"grid",gridTemplateColumns:"1fr 2fr",gap:64,alignItems:"start",marginBottom:64}} className="sobre-grid">
+          <div>
+            <LineNo n={6}/>
+            <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:0,lineHeight:1.15}}>
+              Un modelo<br/><em style={{color:CRIMSON,fontStyle:"italic"}}>transparente</em>
+            </h2>
+          </div>
+        </motion.div>
+
+        <div style={{background:INK2,padding:"56px 48px",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:`linear-gradient(90deg,${CRIMSON},transparent)`}}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr auto",gap:48,alignItems:"center"}} className="precio-inner">
             <div>
-              <span style={{fontFamily:"'Courier New', monospace",fontSize:11,fontWeight:600,color:CYAN,textTransform:"uppercase",letterSpacing:"0.12em"}}>Fee de éxito — único modelo</span>
-              <h3 style={{
-                fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(34px,5vw,56px)",margin:"14px 0 8px",lineHeight:1,
-                background:`linear-gradient(90deg, ${CYAN}, ${ORANGE})`,WebkitBackgroundClip:"text",backgroundClip:"text",color:"transparent",
-              }}>1 mes</h3>
-              <p style={{fontFamily:"Inter, sans-serif",fontSize:14,color:MUTED,margin:"0 0 24px"}}>de sueldo bruto + IVA — solo si hay incorporación</p>
-              <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              <span style={{fontFamily:"Inter, sans-serif",fontSize:10,fontWeight:700,letterSpacing:"0.18em",textTransform:"uppercase",color:CRIMSON}}>Fee de éxito — único modelo</span>
+              <h3 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(40px,6vw,72px)",color:WHITE,margin:"16px 0 8px",lineHeight:1}}>
+                1 mes
+              </h3>
+              <p style={{fontFamily:"Inter, sans-serif",fontSize:15,color:"rgba(255,255,255,0.45)",margin:"0 0 32px"}}>
+                de sueldo bruto + IVA — solo si hay incorporación
+              </p>
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
                 {["Búsqueda activa en mercado pasivo","Shortlist de 3 a 5 perfiles con informe","Acompañamiento hasta la incorporación","Garantía de 3 meses sin coste adicional"].map(item=>(
-                  <div key={item} style={{display:"flex",gap:10,alignItems:"flex-start"}}>
-                    <span style={{color:CYAN,fontSize:13,marginTop:2}}>✓</span>
-                    <span style={{fontFamily:"Inter, sans-serif",fontSize:13,color:MUTED,lineHeight:1.5}}>{item}</span>
+                  <div key={item} style={{display:"flex",gap:14,alignItems:"flex-start"}}>
+                    <span style={{color:CRIMSON,fontSize:14,marginTop:1,flexShrink:0}}>—</span>
+                    <span style={{fontFamily:"Inter, sans-serif",fontSize:13,color:"rgba(255,255,255,0.5)",lineHeight:1.6}}>{item}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div className="precio-cta">
-              <PillButton variant="cyan" onClick={()=>document.getElementById("contacto")?.scrollIntoView({behavior:"smooth"})}>Solicitar propuesta</PillButton>
+              <Btn variant="primary" onClick={()=>document.getElementById("contacto")?.scrollIntoView({behavior:"smooth"})}>
+                Solicitar propuesta
+              </Btn>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
 }
 
 // ── Contacto ──────────────────────────────────────────────────────────────────
-// Para recibir los mensajes en tu correo (hola@tiey.cc), genera una Access Key
-// gratis en https://web3forms.com (solo pides email, no requiere cuenta) y
-// pégala aquí abajo. Sin esto el formulario no enviará nada.
 const WEB3FORMS_ACCESS_KEY = "9662f6a0-70d8-4c87-81ec-c56e48d02987";
 
 function Contacto() {
   const [form, setForm] = useState({nombre:"",empresa:"",email:"",mensaje:""});
-  const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const handleChange = e => setForm(f=>({...f,[e.target.name]:e.target.value}));
   const handleSubmit = async () => {
-    if(!form.nombre||!form.email||!form.mensaje) {
-      setError("Completa al menos nombre, email y mensaje.");
-      return;
-    }
-    setError("");
-    setSending(true);
+    if(!form.nombre||!form.email||!form.mensaje){ setError("Completa nombre, email y mensaje."); return; }
+    setError(""); setSending(true);
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          access_key: WEB3FORMS_ACCESS_KEY,
-          subject: `Nuevo contacto desde tiey.cc — ${form.nombre}`,
-          from_name: "Tiey — Formulario web",
-          name: form.nombre,
-          email: form.email,
-          empresa: form.empresa,
-          mensaje: form.mensaje,
-        }),
+      const res = await fetch("https://api.web3forms.com/submit",{
+        method:"POST", headers:{"Content-Type":"application/json",Accept:"application/json"},
+        body:JSON.stringify({ access_key:WEB3FORMS_ACCESS_KEY, subject:`Nuevo contacto desde tiey.cc — ${form.nombre}`,
+          from_name:"Tiey — Formulario web", ...form }),
       });
       const data = await res.json();
-      if (data.success) {
-        window.location.href = "/gracias";
-      } else {
-        setError("No se pudo enviar. Intenta de nuevo o escríbenos a hola@tiey.cc.");
-      }
-    } catch {
-      setError("No se pudo enviar. Intenta de nuevo o escríbenos a hola@tiey.cc.");
-    } finally {
-      setSending(false);
-    }
+      if(data.success) window.location.href="/gracias";
+      else setError("No se pudo enviar. Escríbenos a hola@tiey.cc.");
+    } catch { setError("No se pudo enviar. Escríbenos a hola@tiey.cc."); }
+    finally { setSending(false); }
   };
   const inputStyle = {
-    width:"100%", background:"rgba(0,240,255,0.04)", border:"1px solid rgba(0,240,255,0.18)",
-    borderRadius:14, color:TEXT, fontFamily:"Inter, sans-serif", fontSize:14,
-    padding:"14px 18px", outline:"none", boxSizing:"border-box", transition:"border-color 0.2s, box-shadow 0.2s",
+    width:"100%", background:"transparent",
+    border:"none", borderBottom:`1px solid rgba(28,28,28,0.2)`,
+    color:INK, fontFamily:"Inter, sans-serif", fontSize:15,
+    padding:"14px 0", outline:"none", transition:"border-color 0.2s",
+    boxSizing:"border-box",
   };
   return (
-    <section id="contacto" style={{position:"relative",background:DEEP,padding:"60px 5% 0",overflow:"hidden"}}>
-      <GridBG opacity={0.05}/>
-      <div style={{maxWidth:1280,margin:"0 auto",position:"relative",minHeight:520,zIndex:1,
-        display:"grid", gridTemplateColumns:"1fr 1fr", gap:40, alignItems:"center"}} className="contacto-grid">
-
-        <motion.div {...useFadeUp()} style={{maxWidth:420}}>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(30px,4.5vw,52px)",letterSpacing:"-0.02em",lineHeight:1.15,color:TEXT,margin:"0 0 16px"}}>
-            ¿Listo para encontrar a tu próximo líder?
+    <section id="contacto" style={{background:CREAM2,padding:"112px 5%"}}>
+      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 1.2fr",gap:80,alignItems:"start"}} className="contacto-grid">
+        <motion.div {...useFadeUp()}>
+          <LineNo n={7}/>
+          <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:"0 0 24px",lineHeight:1.1}}>
+            ¿Listo para<br/>encontrar a tu<br/>próximo líder?
           </h2>
-          <p style={{fontFamily:"Inter, sans-serif",fontSize:13.5,color:GRAY,lineHeight:1.7,margin:0}}>
-            No es solo dar resultados — los creamos. Cuéntanos qué necesitas y en 24h te decimos cómo podemos ayudarte.
+          <Rule style={{marginBottom:24}}/>
+          <p style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.85,color:MIST,marginBottom:40,maxWidth:360}}>
+            Cuéntanos qué necesitas y en 24h te decimos si podemos ayudarte y cómo.
           </p>
+          {[{icon:"✉",label:"Email",value:"hola@tiey.cc"},{icon:"◎",label:"Ubicación",value:"Monterrey, N.L. México"}].map(({icon,label,value})=>(
+            <div key={label} style={{display:"flex",gap:14,marginBottom:20,alignItems:"flex-start"}}>
+              <span style={{fontSize:16,color:CRIMSON,lineHeight:1,marginTop:2}}>{icon}</span>
+              <div>
+                <span style={{fontFamily:"Inter, sans-serif",fontSize:10,letterSpacing:"0.12em",textTransform:"uppercase",color:SAND,display:"block",marginBottom:2}}>{label}</span>
+                <span style={{fontFamily:"Inter, sans-serif",fontSize:14,color:INK}}>{value}</span>
+              </div>
+            </div>
+          ))}
         </motion.div>
 
-        <motion.div {...useFadeUp(0.15)} style={{
-          maxWidth:420, width:"100%", marginLeft:"auto",
-          background:CARD, border:`1px solid rgba(0,240,255,0.18)`, borderRadius:28, padding:32,
-          boxShadow:`0 20px 60px rgba(0,0,0,0.5), ${glowCyan(0.1)}`, position:"relative", zIndex:2,
-        }} className="contacto-card">
-          <AnimatePresence mode="wait">
-            {sent ? (
-              <motion.div key="ok" initial={{opacity:0}} animate={{opacity:1}} style={{textAlign:"center",padding:"24px 0"}}>
-                <span style={{fontSize:36,display:"block",marginBottom:12,color:CYAN,filter:`drop-shadow(0 0 8px ${CYAN})`}}>✓</span>
-                <h3 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:20,color:TEXT,margin:"0 0 8px"}}>Mensaje recibido</h3>
-                <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:GRAY,lineHeight:1.6}}>Te respondemos en menos de 24 horas.</p>
-              </motion.div>
-            ) : (
-              <motion.div key="form" style={{display:"flex",flexDirection:"column",gap:12}}>
-                <h3 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:20,margin:"0 0 4px",color:TEXT}}>
-                  <span style={{color:CYAN,textShadow:`0 0 8px rgba(0,240,255,0.5)`}}>Construyamos</span> algo bueno
-                </h3>
-                {[
-                  {name:"nombre",ph:"Tu nombre",type:"text"},
-                  {name:"empresa",ph:"Empresa",type:"text"},
-                  {name:"email",ph:"Email de contacto",type:"email"},
-                ].map(({name,ph,type})=>(
-                  <input key={name} name={name} type={type} value={form[name]} onChange={handleChange} placeholder={ph} style={inputStyle}
-                    onFocus={e=>{e.target.style.borderColor=CYAN; e.target.style.boxShadow=glowCyan(0.2);}} onBlur={e=>{e.target.style.borderColor="rgba(0,240,255,0.18)"; e.target.style.boxShadow="none";}} />
-                ))}
-                <textarea name="mensaje" rows={3} value={form.mensaje} onChange={handleChange} placeholder="¿Qué rol buscas?"
-                  style={{...inputStyle,resize:"vertical"}}
-                  onFocus={e=>{e.target.style.borderColor=CYAN; e.target.style.boxShadow=glowCyan(0.2);}} onBlur={e=>{e.target.style.borderColor="rgba(0,240,255,0.18)"; e.target.style.boxShadow="none";}} />
-                {error && (
-                  <p style={{fontFamily:"Inter, sans-serif",fontSize:12,color:ORANGE,margin:0}}>{error}</p>
-                )}
-                <PillButton variant="cyan" onClick={handleSubmit} style={{justifyContent:"center", width:"100%", marginTop:4, opacity:sending?0.7:1}}>
-                  {sending?"Enviando...":"Empezar ahora"}
-                </PillButton>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <motion.div {...useFadeUp(0.15)}>
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {[{name:"nombre",label:"Tu nombre *",type:"text",ph:"Ana García"},{name:"empresa",label:"Empresa",type:"text",ph:"StartupXYZ"},{name:"email",label:"Email *",type:"email",ph:"ana@empresa.com"}].map(({name,label,type,ph})=>(
+              <div key={name} style={{marginBottom:8}}>
+                <label style={{fontFamily:"Inter, sans-serif",fontSize:10,letterSpacing:"0.12em",textTransform:"uppercase",color:SAND,display:"block",marginBottom:4}}>{label}</label>
+                <input name={name} type={type} value={form[name]} onChange={handleChange} placeholder={ph}
+                  style={inputStyle} onFocus={e=>e.target.style.borderBottomColor=CRIMSON} onBlur={e=>e.target.style.borderBottomColor="rgba(28,28,28,0.2)"}/>
+              </div>
+            ))}
+            <div style={{marginBottom:16}}>
+              <label style={{fontFamily:"Inter, sans-serif",fontSize:10,letterSpacing:"0.12em",textTransform:"uppercase",color:SAND,display:"block",marginBottom:4}}>Cuéntanos más *</label>
+              <textarea name="mensaje" value={form.mensaje} onChange={handleChange} rows={4}
+                placeholder="¿Qué rol buscas? ¿Para cuándo lo necesitas?"
+                style={{...inputStyle,resize:"vertical"}}
+                onFocus={e=>e.target.style.borderBottomColor=CRIMSON} onBlur={e=>e.target.style.borderBottomColor="rgba(28,28,28,0.2)"}/>
+            </div>
+            {error && <p style={{fontFamily:"Inter, sans-serif",fontSize:12,color:CRIMSON,margin:"0 0 8px"}}>{error}</p>}
+            <Btn variant="primary" onClick={handleSubmit} style={{opacity:sending?0.7:1}}>
+              {sending?"Enviando...":"Enviar mensaje"}
+            </Btn>
+          </div>
         </motion.div>
-
-        {/* Oversized wordmark behind */}
-        <div style={{
-          position:"absolute", bottom:-60, left:0, right:0, textAlign:"center",
-          pointerEvents:"none", zIndex:0, lineHeight:0.8,
-        }} className="contacto-wordmark">
-          <span style={{
-            fontFamily:"Manrope, sans-serif", fontWeight:800,
-            fontSize:"clamp(100px, 18vw, 260px)", letterSpacing:"-0.04em",
-            color:"transparent", WebkitTextStroke:`1px rgba(0,240,255,0.1)`,
-          }}>tiey</span>
-        </div>
       </div>
     </section>
   );
@@ -941,200 +916,141 @@ function Contacto() {
 
 // ── Footer ────────────────────────────────────────────────────────────────────
 function Footer() {
+  const go = id => document.getElementById(id)?.scrollIntoView({behavior:"smooth"});
   return (
-    <footer style={{position:"relative",background:DEEP,padding:"60px 5% 40px",borderTop:`1px solid rgba(0,240,255,0.12)`,overflow:"hidden"}}>
-      <GridBG opacity={0.03}/>
-      <div style={{maxWidth:1280,margin:"0 auto",display:"flex",flexWrap:"wrap",gap:40,justifyContent:"space-between",position:"relative",zIndex:1}} className="footer-cols">
-        <div style={{maxWidth:340}}>
-          <h3 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(24px,3vw,34px)",letterSpacing:"-0.02em",margin:"0 0 20px",color:TEXT,lineHeight:1.2}}>
-            Será un placer trabajar contigo.
-          </h3>
-          <PillButton variant="outline" onClick={()=>document.getElementById("contacto")?.scrollIntoView({behavior:"smooth"})}>Empezar ahora</PillButton>
-        </div>
-
-        <div>
-          <h4 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:14,margin:"0 0 14px",color:TEXT}}>Ubicación</h4>
-          <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:GRAY,lineHeight:1.7,margin:0}}>Monterrey, N.L. México —<br/>trabajamos en remoto</p>
-          <h4 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:14,margin:"24px 0 14px",color:TEXT}}>Social</h4>
-          <div style={{display:"flex",flexDirection:"column",gap:6}}>
-            {["LinkedIn","X / Twitter"].map(s=>(
-              <a key={s} href="#" style={{fontFamily:"Inter, sans-serif",fontSize:13,color:GRAY,textDecoration:"none",transition:"color 0.2s"}}
-                onMouseEnter={e=>e.target.style.color=CYAN} onMouseLeave={e=>e.target.style.color=GRAY}>{s}</a>
-            ))}
+    <footer style={{background:INK,padding:"72px 5% 40px",borderTop:`3px solid ${CRIMSON}`}}>
+      <div style={{maxWidth:1280,margin:"0 auto"}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:48,justifyContent:"space-between",marginBottom:64}} className="footer-cols">
+          <div style={{maxWidth:340}}>
+            <h3 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(24px,3vw,36px)",color:WHITE,margin:"0 0 24px",lineHeight:1.2}}>
+              Será un placer<br/>trabajar contigo.
+            </h3>
+            <Btn variant="outline-dark" onClick={()=>go("contacto")}>Contactar ahora</Btn>
           </div>
-        </div>
-
-        <div>
-          <h4 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:14,margin:"0 0 14px",color:TEXT}}>Contacto</h4>
-          <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:GRAY,lineHeight:1.9,margin:0}}>
-            hola@tiey.cc
-          </p>
-          <h4 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:14,margin:"24px 0 14px",color:TEXT}}>Enlaces</h4>
-          <div style={{display:"flex",gap:24}}>
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {[{label:"Servicios",id:"servicios"},{label:"Metodología",id:"metodología"}].map(({label,id})=>(
-                <button key={id} onClick={()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth"})}
-                  style={{fontFamily:"Inter, sans-serif",fontSize:13,color:GRAY,background:"none",border:"none",padding:0,cursor:"pointer",textAlign:"left",transition:"color 0.2s"}}
-                  onMouseEnter={e=>e.target.style.color=CYAN} onMouseLeave={e=>e.target.style.color=GRAY}>{label}</button>
+          <div style={{display:"flex",gap:64,flexWrap:"wrap"}}>
+            <div>
+              <h4 style={{fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,margin:"0 0 18px"}}>Ubicación</h4>
+              <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.8,margin:0}}>Monterrey, N.L. México</p>
+              <h4 style={{fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,margin:"32px 0 18px"}}>Social</h4>
+              {["LinkedIn","X / Twitter"].map(s=>(
+                <a key={s} href="#" style={{display:"block",fontFamily:"Inter, sans-serif",fontSize:13,color:"rgba(255,255,255,0.4)",textDecoration:"none",marginBottom:8,transition:"color 0.2s"}}
+                  onMouseEnter={e=>e.target.style.color=WHITE} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,0.4)"}>{s}</a>
               ))}
             </div>
-            <div style={{display:"flex",flexDirection:"column",gap:6}}>
-              {[{label:"Casos",id:"casos"},{label:"Nosotros",id:"sobre"}].map(({label,id})=>(
-                <button key={id} onClick={()=>document.getElementById(id)?.scrollIntoView({behavior:"smooth"})}
-                  style={{fontFamily:"Inter, sans-serif",fontSize:13,color:GRAY,background:"none",border:"none",padding:0,cursor:"pointer",textAlign:"left",transition:"color 0.2s"}}
-                  onMouseEnter={e=>e.target.style.color=CYAN} onMouseLeave={e=>e.target.style.color=GRAY}>{label}</button>
+            <div>
+              <h4 style={{fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,margin:"0 0 18px"}}>Contacto</h4>
+              <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:"rgba(255,255,255,0.4)",lineHeight:1.9,margin:0}}>hola@tiey.cc</p>
+              <h4 style={{fontFamily:"Inter, sans-serif",fontWeight:700,fontSize:10,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,margin:"32px 0 18px"}}>Enlaces</h4>
+              {[{label:"Servicios",id:"servicios"},{label:"Proceso",id:"metodología"},{label:"Casos",id:"casos"},{label:"Nosotros",id:"sobre"}].map(({label,id})=>(
+                <button key={id} onClick={()=>go(id)} style={{display:"block",background:"none",border:"none",fontFamily:"Inter, sans-serif",fontSize:13,color:"rgba(255,255,255,0.4)",cursor:"pointer",padding:"0 0 8px",textAlign:"left",transition:"color 0.2s"}}
+                  onMouseEnter={e=>e.target.style.color=WHITE} onMouseLeave={e=>e.target.style.color="rgba(255,255,255,0.4)"}>{label}</button>
               ))}
             </div>
           </div>
         </div>
-      </div>
-      <div style={{maxWidth:1280,margin:"40px auto 0",fontFamily:"'Courier New', monospace",fontSize:12,color:"rgba(234,241,255,0.3)",position:"relative",zIndex:1}}>
-        © 2025 Tiey — Búsqueda de talento tech &amp; digital
+        <Rule light/>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingTop:24,flexWrap:"wrap",gap:12}}>
+          <span style={{fontFamily:"'Playfair Display', serif",fontSize:20,fontWeight:700,color:WHITE}}>Tiey<span style={{color:CRIMSON}}>.</span></span>
+          <span style={{fontFamily:"Inter, sans-serif",fontSize:11,color:"rgba(255,255,255,0.25)"}}>© 2025 Tiey — Búsqueda de talento tech &amp; digital</span>
+        </div>
       </div>
     </footer>
-  );
-}
-
-// ── FAQ ───────────────────────────────────────────────────────────────────────
-const FAQS = [
-  { q:"¿Cuánto cuesta el servicio?", a:"Nuestro fee es de 1 mes de sueldo bruto + IVA, pagado únicamente al contratar. Sin retainer, sin pagos parciales — solo cobras si incorporas." },
-  { q:"¿Cuánto tarda el proceso?", a:"Normalmente entre 4 y 6 semanas desde el briefing hasta la incorporación. Para perfiles muy especializados puede extenderse, pero siempre con comunicación constante." },
-  { q:"¿Qué pasa si el candidato no funciona?", a:"Ofrecemos garantía de 3 meses. Si la persona no encaja por causas atribuibles al proceso de selección, repetimos la búsqueda sin coste adicional." },
-  { q:"¿Solo trabajáis con empresas tech?", a:"Nos especializamos en Tech y Digital, pero también cubrimos mandos medios en otras áreas (Finance, Ops, HR, Ventas) y estamos desarrollando soluciones de IA Recruiting para contratación operativa." },
-  { q:"¿Trabajáis solo en Monterrey?", a:"Monterrey es nuestra base, pero trabajamos con empresas en toda Latinoamérica y España. La mayoría de los procesos son 100% remotos." },
-  { q:"¿Cómo empezamos?", a:"Completa el formulario de contacto o escríbenos a hola@tiey.cc. En menos de 24 horas te decimos si podemos ayudarte y cómo sería el proceso." },
-];
-
-function FAQ() {
-  const fade = useFadeUp();
-  const [open, setOpen] = useState(null);
-  return (
-    <section id="faq" style={{position:"relative",background:DARK,padding:"100px 5%",overflow:"hidden"}}>
-      <GridBG opacity={0.04}/>
-      <div style={{maxWidth:860,margin:"0 auto",position:"relative",zIndex:1}}>
-        <motion.div {...fade} style={{textAlign:"center",marginBottom:56}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:18}}>
-            <SparkIcon/>
-            <span style={{fontFamily:"'Courier New', monospace",fontSize:12,fontWeight:700,color:CYAN,textTransform:"uppercase",letterSpacing:"0.18em"}}>FAQ</span>
-          </div>
-          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(28px,4vw,44px)",letterSpacing:"-0.02em",color:TEXT,margin:0}}>
-            Preguntas frecuentes
-          </h2>
-        </motion.div>
-        <div style={{display:"flex",flexDirection:"column",gap:12}}>
-          {FAQS.map((f,i)=>{
-            const fd = useFadeUp(i*0.06);
-            const isOpen = open===i;
-            return (
-              <motion.div key={i} {...fd}
-                style={{borderRadius:16,background:CARD,border:`1px solid ${isOpen?"rgba(0,240,255,0.3)":"rgba(0,240,255,0.1)"}`,overflow:"hidden",transition:"border-color 0.2s",boxShadow:isOpen?glowCyan(0.08):"none"}}>
-                <button onClick={()=>setOpen(isOpen?null:i)}
-                  style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"22px 28px",background:"none",border:"none",cursor:"pointer",gap:16}}>
-                  <span style={{fontFamily:"Manrope, sans-serif",fontWeight:700,fontSize:16,color:TEXT,textAlign:"left",lineHeight:1.4}}>{f.q}</span>
-                  <span style={{color:CYAN,fontSize:22,flexShrink:0,transform:isOpen?"rotate(45deg)":"rotate(0deg)",transition:"transform 0.3s"}}>+</span>
-                </button>
-                <AnimatePresence initial={false}>
-                  {isOpen && (
-                    <motion.div initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}} transition={{duration:0.3,ease:[0.22,1,0.36,1]}}>
-                      <p style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.8,color:MUTED,margin:0,padding:"0 28px 22px"}}>{f.a}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
   );
 }
 
 // ── Gracias ───────────────────────────────────────────────────────────────────
 function Gracias() {
   return (
-    <section style={{position:"relative",background:DEEP,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"5%",overflow:"hidden"}}>
-      <GridBG opacity={0.05}/>
-      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:560}}>
-        <div style={{fontSize:56,marginBottom:24,filter:`drop-shadow(0 0 16px ${CYAN})`}}>✓</div>
-        <h1 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(32px,5vw,52px)",color:TEXT,margin:"0 0 16px",letterSpacing:"-0.02em"}}>
-          Mensaje recibido
-        </h1>
-        <p style={{fontFamily:"Inter, sans-serif",fontSize:16,lineHeight:1.8,color:MUTED,marginBottom:40}}>
-          Gracias por contactarnos. Te respondemos en menos de 24 horas — normalmente mucho antes.
+    <section style={{background:INK,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"5%"}}>
+      <div style={{textAlign:"center",maxWidth:520}}>
+        <div style={{fontSize:48,marginBottom:24,color:CRIMSON}}>✓</div>
+        <h1 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,5vw,52px)",color:WHITE,margin:"0 0 16px"}}>Mensaje recibido</h1>
+        <p style={{fontFamily:"Inter, sans-serif",fontSize:16,lineHeight:1.8,color:"rgba(255,255,255,0.5)",marginBottom:40}}>
+          Te respondemos en menos de 24 horas — normalmente mucho antes.
         </p>
-        <PillButton variant="cyan" onClick={()=>window.location.href="/"}>Volver al inicio</PillButton>
+        <Btn variant="primary" onClick={()=>window.location.href="/"}>Volver al inicio</Btn>
       </div>
     </section>
   );
 }
 
+// ── CookieBanner — cumple con Google Ads + GDPR básico ──────────────────────
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const accepted = localStorage.getItem("tiey_cookies");
+    if (!accepted) setVisible(true);
+  }, []);
+  const accept = () => { localStorage.setItem("tiey_cookies","1"); setVisible(false); };
+  const decline = () => { localStorage.setItem("tiey_cookies","0"); setVisible(false); };
+  if (!visible) return null;
+  return (
+    <motion.div initial={{y:80,opacity:0}} animate={{y:0,opacity:1}} transition={{duration:0.5,ease:[0.22,1,0.36,1]}}
+      style={{
+        position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", zIndex:300,
+        width:"min(680px, 92vw)",
+        background:INK, border:`1px solid rgba(200,16,46,0.2)`,
+        borderRadius:16, padding:"20px 28px",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        gap:20, flexWrap:"wrap",
+        boxShadow:"0 8px 40px rgba(0,0,0,0.35)",
+      }}>
+      <p style={{fontFamily:"Inter, sans-serif",fontSize:13,color:"rgba(255,255,255,0.6)",margin:0,lineHeight:1.6,flex:1,minWidth:200}}>
+        Usamos cookies para mejorar tu experiencia y medir el rendimiento de nuestras campañas.{" "}
+        <a href="#" style={{color:CRIMSON,textDecoration:"none"}}>Política de privacidad</a>
+      </p>
+      <div style={{display:"flex",gap:10,flexShrink:0}}>
+        <button onClick={decline} style={{
+          background:"transparent", border:"1px solid rgba(255,255,255,0.2)", color:"rgba(255,255,255,0.55)",
+          fontFamily:"Inter, sans-serif",fontSize:11,fontWeight:600,letterSpacing:"0.1em",
+          textTransform:"uppercase",padding:"9px 18px",borderRadius:8,cursor:"pointer",
+        }}>Rechazar</button>
+        <button onClick={accept} style={{
+          background:CRIMSON, border:"none", color:WHITE,
+          fontFamily:"Inter, sans-serif",fontSize:11,fontWeight:600,letterSpacing:"0.1em",
+          textTransform:"uppercase",padding:"9px 18px",borderRadius:8,cursor:"pointer",
+          boxShadow:"0 2px 12px rgba(200,16,46,0.35)",
+        }}>Aceptar</button>
+      </div>
+    </motion.div>
+  );
+}
 
+// ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  // Simple routing — /gracias for Google Ads conversion tracking
   const isGracias = window.location.pathname === "/gracias";
   if (isGracias) return <Gracias />;
-
-  // SEO (title, meta tags, OG, JSON-LD) vive en index.html — server-side,
-  // visible para crawlers sin esperar a que cargue React.
 
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:${DEEP}; }
-        ::selection { background:${CYAN}; color:${DEEP}; }
-        /* ── Responsive: tablet 900px ─────────────────────────────────── */
+        body { background:${CREAM}; }
+        ::selection { background:${CRIMSON}; color:${WHITE}; }
+
         @media (max-width:1100px) {
-          .desk-nav, .desk-cta { display:none !important; }
+          .desk-nav { display:none !important; }
           .burger-btn { display:flex !important; }
         }
         @media (max-width:900px) {
-          /* Hero */
-          .hero-grid { grid-template-columns:1fr !important; min-height:auto !important; gap:40px !important; padding-top:0 !important; }
-          .hero-globe-col { order:-1; display:flex; justify-content:center; }
-
-          /* Grids */
-          .sobre-grid    { grid-template-columns:1fr !important; gap:24px !important; }
-          .sobre-stats   { grid-template-columns:1fr 1fr !important; }
-          .contacto-grid { grid-template-columns:1fr !important; gap:40px !important; }
-          .precio-inner  { grid-template-columns:1fr !important; gap:32px !important; }
-          .precio-cta    { display:flex !important; justify-content:flex-start !important; }
-          .contacto-card { margin:0 auto !important; width:100% !important; }
-          .contacto-wordmark { display:none !important; }
-          .servicios-grid { grid-template-columns:1fr 1fr !important; }
-          .metodo-grid    { grid-template-columns:1fr 1fr !important; }
+          .hero-bottom { grid-template-columns:1fr !important; gap:32px !important; }
+          .hero-bottom > div:last-child { justify-content:flex-start !important; }
+          .sobre-grid { grid-template-columns:1fr !important; gap:32px !important; }
+          .contacto-grid { grid-template-columns:1fr !important; gap:48px !important; }
+          .precio-inner { grid-template-columns:1fr !important; gap:32px !important; }
+          .precio-cta { margin-top:16px; }
+          .footer-cols { flex-direction:column !important; gap:48px !important; }
+          .service-row { grid-template-columns:40px 1fr !important; gap:16px !important; }
+          .service-row > *:last-child { grid-column:2; }
+          .testi-divider { display:none !important; }
         }
-
-        /* ── Responsive: mobile 560px ─────────────────────────────────── */
         @media (max-width:560px) {
-          /* Typography scale down */
-          h1 { font-size: clamp(32px, 8vw, 48px) !important; }
-
-          /* Hero globe — limit size on small screens */
-          .hero-globe-col canvas { width:280px !important; height:280px !important; }
-
-          /* Single column everything */
-          .servicios-grid { grid-template-columns:1fr !important; }
-          .metodo-grid    { grid-template-columns:1fr !important; }
-          .sobre-stats    { grid-template-columns:1fr !important; }
-
-          /* Testimonial */
-          .testi-divider  { display:none !important; }
-
-          /* Nav pill — shrink padding */
-          nav { padding-left:14px !important; padding-right:8px !important; }
-
-          /* Section padding — reduce on mobile */
-          section { padding-left:5% !important; padding-right:5% !important; padding-top:72px !important; padding-bottom:72px !important; }
-
-          /* Precio card */
-          .precio-card { padding:32px 24px !important; }
-
-          /* Footer columns */
-          .footer-cols { flex-direction:column !important; gap:40px !important; }
+          section { padding-top:72px !important; padding-bottom:72px !important; }
+          .services-accordion { flex-direction:column !important; height:auto !important; }
+          .services-accordion > div { width:100% !important; height:120px !important; border-radius:0 !important; }
+          .services-accordion > div[style*="42%"] { height:260px !important; }
         }
-
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
         }
@@ -1151,6 +1067,7 @@ export default function App() {
         <Contacto />
       </main>
       <Footer />
+      <CookieBanner />
     </>
   );
 }
