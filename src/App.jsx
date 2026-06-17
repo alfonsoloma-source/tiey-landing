@@ -854,7 +854,7 @@ function Contacto() {
       });
       const data = await res.json();
       if (data.success) {
-        setSent(true);
+        window.location.href = "/gracias";
       } else {
         setError("No se pudo enviar. Intenta de nuevo o escríbenos a hola@tiey.cc.");
       }
@@ -944,7 +944,7 @@ function Footer() {
   return (
     <footer style={{position:"relative",background:DEEP,padding:"60px 5% 40px",borderTop:`1px solid rgba(0,240,255,0.12)`,overflow:"hidden"}}>
       <GridBG opacity={0.03}/>
-      <div style={{maxWidth:1280,margin:"0 auto",display:"flex",flexWrap:"wrap",gap:40,justifyContent:"space-between",position:"relative",zIndex:1}}>
+      <div style={{maxWidth:1280,margin:"0 auto",display:"flex",flexWrap:"wrap",gap:40,justifyContent:"space-between",position:"relative",zIndex:1}} className="footer-cols">
         <div style={{maxWidth:340}}>
           <h3 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(24px,3vw,34px)",letterSpacing:"-0.02em",margin:"0 0 20px",color:TEXT,lineHeight:1.2}}>
             Será un placer trabajar contigo.
@@ -995,8 +995,85 @@ function Footer() {
   );
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
+// ── FAQ ───────────────────────────────────────────────────────────────────────
+const FAQS = [
+  { q:"¿Cuánto cuesta el servicio?", a:"Nuestro fee es de 1 mes de sueldo bruto + IVA, pagado únicamente al contratar. Sin retainer, sin pagos parciales — solo cobras si incorporas." },
+  { q:"¿Cuánto tarda el proceso?", a:"Normalmente entre 4 y 6 semanas desde el briefing hasta la incorporación. Para perfiles muy especializados puede extenderse, pero siempre con comunicación constante." },
+  { q:"¿Qué pasa si el candidato no funciona?", a:"Ofrecemos garantía de 3 meses. Si la persona no encaja por causas atribuibles al proceso de selección, repetimos la búsqueda sin coste adicional." },
+  { q:"¿Solo trabajáis con empresas tech?", a:"Nos especializamos en Tech y Digital, pero también cubrimos mandos medios en otras áreas (Finance, Ops, HR, Ventas) y estamos desarrollando soluciones de IA Recruiting para contratación operativa." },
+  { q:"¿Trabajáis solo en Monterrey?", a:"Monterrey es nuestra base, pero trabajamos con empresas en toda Latinoamérica y España. La mayoría de los procesos son 100% remotos." },
+  { q:"¿Cómo empezamos?", a:"Completa el formulario de contacto o escríbenos a hola@tiey.cc. En menos de 24 horas te decimos si podemos ayudarte y cómo sería el proceso." },
+];
+
+function FAQ() {
+  const fade = useFadeUp();
+  const [open, setOpen] = useState(null);
+  return (
+    <section id="faq" style={{position:"relative",background:DARK,padding:"100px 5%",overflow:"hidden"}}>
+      <GridBG opacity={0.04}/>
+      <div style={{maxWidth:860,margin:"0 auto",position:"relative",zIndex:1}}>
+        <motion.div {...fade} style={{textAlign:"center",marginBottom:56}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:18}}>
+            <SparkIcon/>
+            <span style={{fontFamily:"'Courier New', monospace",fontSize:12,fontWeight:700,color:CYAN,textTransform:"uppercase",letterSpacing:"0.18em"}}>FAQ</span>
+          </div>
+          <h2 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(28px,4vw,44px)",letterSpacing:"-0.02em",color:TEXT,margin:0}}>
+            Preguntas frecuentes
+          </h2>
+        </motion.div>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {FAQS.map((f,i)=>{
+            const fd = useFadeUp(i*0.06);
+            const isOpen = open===i;
+            return (
+              <motion.div key={i} {...fd}
+                style={{borderRadius:16,background:CARD,border:`1px solid ${isOpen?"rgba(0,240,255,0.3)":"rgba(0,240,255,0.1)"}`,overflow:"hidden",transition:"border-color 0.2s",boxShadow:isOpen?glowCyan(0.08):"none"}}>
+                <button onClick={()=>setOpen(isOpen?null:i)}
+                  style={{width:"100%",display:"flex",justifyContent:"space-between",alignItems:"center",padding:"22px 28px",background:"none",border:"none",cursor:"pointer",gap:16}}>
+                  <span style={{fontFamily:"Manrope, sans-serif",fontWeight:700,fontSize:16,color:TEXT,textAlign:"left",lineHeight:1.4}}>{f.q}</span>
+                  <span style={{color:CYAN,fontSize:22,flexShrink:0,transform:isOpen?"rotate(45deg)":"rotate(0deg)",transition:"transform 0.3s"}}>+</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}} transition={{duration:0.3,ease:[0.22,1,0.36,1]}}>
+                      <p style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.8,color:MUTED,margin:0,padding:"0 28px 22px"}}>{f.a}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ── Gracias ───────────────────────────────────────────────────────────────────
+function Gracias() {
+  return (
+    <section style={{position:"relative",background:DEEP,minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:"5%",overflow:"hidden"}}>
+      <GridBG opacity={0.05}/>
+      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:560}}>
+        <div style={{fontSize:56,marginBottom:24,filter:`drop-shadow(0 0 16px ${CYAN})`}}>✓</div>
+        <h1 style={{fontFamily:"Manrope, sans-serif",fontWeight:800,fontSize:"clamp(32px,5vw,52px)",color:TEXT,margin:"0 0 16px",letterSpacing:"-0.02em"}}>
+          Mensaje recibido
+        </h1>
+        <p style={{fontFamily:"Inter, sans-serif",fontSize:16,lineHeight:1.8,color:MUTED,marginBottom:40}}>
+          Gracias por contactarnos. Te respondemos en menos de 24 horas — normalmente mucho antes.
+        </p>
+        <PillButton variant="cyan" onClick={()=>window.location.href="/"}>Volver al inicio</PillButton>
+      </div>
+    </section>
+  );
+}
+
+
 export default function App() {
+  // Simple routing — /gracias for Google Ads conversion tracking
+  const isGracias = window.location.pathname === "/gracias";
+  if (isGracias) return <Gracias />;
+
   // SEO (title, meta tags, OG, JSON-LD) vive en index.html — server-side,
   // visible para crawlers sin esperar a que cargue React.
 
@@ -1007,28 +1084,57 @@ export default function App() {
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:${DEEP}; }
         ::selection { background:${CYAN}; color:${DEEP}; }
+        /* ── Responsive: tablet 900px ─────────────────────────────────── */
         @media (max-width:1100px) {
           .desk-nav, .desk-cta { display:none !important; }
           .burger-btn { display:flex !important; }
         }
         @media (max-width:900px) {
-          .hero-grid { grid-template-columns:1fr !important; min-height:auto !important; padding-top:20px; gap:60px !important; }
-          .hero-globe-col { order:-1; }
-          .sobre-grid, .sobre-stats { grid-template-columns:1fr !important; }
-          .contacto-grid { grid-template-columns:1fr !important; }
-          .precio-inner { grid-template-columns:1fr !important; text-align:center; }
-          .precio-cta { display:flex; justify-content:center; margin-top:16px; }
-          .contacto-card { margin:32px auto 0 !important; }
-          .contacto-wordmark { display:none; }
+          /* Hero */
+          .hero-grid { grid-template-columns:1fr !important; min-height:auto !important; gap:40px !important; padding-top:0 !important; }
+          .hero-globe-col { order:-1; display:flex; justify-content:center; }
+
+          /* Grids */
+          .sobre-grid    { grid-template-columns:1fr !important; gap:24px !important; }
+          .sobre-stats   { grid-template-columns:1fr 1fr !important; }
+          .contacto-grid { grid-template-columns:1fr !important; gap:40px !important; }
+          .precio-inner  { grid-template-columns:1fr !important; gap:32px !important; }
+          .precio-cta    { display:flex !important; justify-content:flex-start !important; }
+          .contacto-card { margin:0 auto !important; width:100% !important; }
+          .contacto-wordmark { display:none !important; }
           .servicios-grid { grid-template-columns:1fr 1fr !important; }
-          .metodo-grid { grid-template-columns:1fr 1fr !important; }
+          .metodo-grid    { grid-template-columns:1fr 1fr !important; }
         }
+
+        /* ── Responsive: mobile 560px ─────────────────────────────────── */
         @media (max-width:560px) {
+          /* Typography scale down */
+          h1 { font-size: clamp(32px, 8vw, 48px) !important; }
+
+          /* Hero globe — limit size on small screens */
+          .hero-globe-col canvas { width:280px !important; height:280px !important; }
+
+          /* Single column everything */
           .servicios-grid { grid-template-columns:1fr !important; }
-          .metodo-grid { grid-template-columns:1fr !important; }
-          .hero-globe-col canvas { width:100% !important; height:auto !important; }
-          .testi-divider { display:none !important; }
+          .metodo-grid    { grid-template-columns:1fr !important; }
+          .sobre-stats    { grid-template-columns:1fr !important; }
+
+          /* Testimonial */
+          .testi-divider  { display:none !important; }
+
+          /* Nav pill — shrink padding */
+          nav { padding-left:14px !important; padding-right:8px !important; }
+
+          /* Section padding — reduce on mobile */
+          section { padding-left:5% !important; padding-right:5% !important; padding-top:72px !important; padding-bottom:72px !important; }
+
+          /* Precio card */
+          .precio-card { padding:32px 24px !important; }
+
+          /* Footer columns */
+          .footer-cols { flex-direction:column !important; gap:40px !important; }
         }
+
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
         }
@@ -1039,6 +1145,7 @@ export default function App() {
         <Servicios />
         <Metodologia />
         <Casos />
+        <FAQ />
         <Sobre />
         <Precios />
         <Contacto />
