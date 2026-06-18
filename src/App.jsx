@@ -151,7 +151,7 @@ function ProfileGallery({ activeRole }) {
   }, []);
 
   return (
-    <div style={{
+    <div className="hero-gallery" style={{
       position:"absolute", right:0, top:0, bottom:0, width:"55%",
       perspective:"900px", perspectiveOrigin:"50% 50%",
       overflow:"hidden", pointerEvents:"none", zIndex:1,
@@ -327,6 +327,45 @@ function InteractiveDots() {
   );
 }
 
+
+// ── WordReveal — stagger reveal por palabras al entrar en viewport ───────────
+function WordReveal({ children, delay=0, style={} }) {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold: 0.25 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  // Split children string into words, keep JSX nodes as-is
+  const parts = typeof children === 'string'
+    ? children.split(' ').map((w, i) => (
+        <span key={i} style={{
+          display:"inline-block",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(18px)",
+          filter: visible ? "blur(0px)" : "blur(5px)",
+          transition: visible
+            ? `opacity 0.5s ease ${delay + i*0.08}s, transform 0.5s ease ${delay + i*0.08}s, filter 0.5s ease ${delay + i*0.08}s`
+            : "none",
+          marginRight:"0.28em",
+        }}>{w}</span>
+      ))
+    : children;
+
+  return (
+    <span ref={ref} style={{display:"block", ...style}}>
+      {parts}
+    </span>
+  );
+}
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
 function Nav() {
@@ -554,118 +593,162 @@ const SERVICES = [
 function Servicios() {
   const fade = useFadeUp();
   const [activeIdx, setActiveIdx] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 900);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   return (
-    <section id="servicios" style={{background:CREAM,padding:"112px 5%"}}>
-      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"300px 1fr",gap:64,alignItems:"center"}} className="sobre-grid">
+    <section id="servicios" style={{background:CREAM, padding:"112px 5%"}}>
+      <div style={{maxWidth:1280, margin:"0 auto"}}>
 
-        {/* Columna izquierda — heading + subtexto */}
-        <motion.div {...fade}>
-          <LineNo n={1}/>
-          <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,3.5vw,52px)",color:INK,margin:"0 0 24px",lineHeight:1.15,letterSpacing:"-0.01em"}}>
-            Donde marcamos<br/>la diferencia
-          </h2>
-          <p style={{fontFamily:"Inter, sans-serif",fontSize:15,lineHeight:1.85,color:MIST,margin:0}}>
-            No somos generalistas. Nos especializamos en Tech, Digital y mandos medios con criterio — para que cada búsqueda cuente.
+        {/* Heading */}
+        <motion.div {...fade} style={{
+          display:"grid", gridTemplateColumns:"1fr 2fr", gap:64,
+          alignItems:"start", marginBottom:56,
+        }} className="sobre-grid">
+          <div>
+            <LineNo n={1}/>
+            <h2 style={{fontFamily:"'Playfair Display', serif", fontWeight:700,
+              fontSize:"clamp(32px,3.5vw,52px)", color:INK, margin:0,
+              lineHeight:1.15, letterSpacing:"-0.01em"}}>
+              <WordReveal>Donde marcamos</WordReveal>
+              <WordReveal delay={0.15}>la diferencia</WordReveal>
+            </h2>
+          </div>
+          <p style={{fontFamily:"Inter, sans-serif", fontSize:15, lineHeight:1.85,
+            color:MIST, margin:0, alignSelf:"end"}}>
+            No somos generalistas. Nos especializamos en Tech, Digital y mandos
+            medios con criterio — para que cada búsqueda cuente.
           </p>
         </motion.div>
 
-        {/* Columna derecha — accordion */}
-        <motion.div {...useFadeUp(0.12)}
-          style={{display:"flex",flexDirection:"row",gap:10,height:420,overflow:"hidden"}}
-          className="services-accordion">
-          {SERVICES.map((s,i)=>{
-            const isActive = i === activeIdx;
-            return (
-              <div key={s.n}
-                onMouseEnter={()=>setActiveIdx(i)}
-                style={{
-                  position:"relative",
-                  height:"100%",
-                  overflow:"hidden",
-                  cursor:"pointer",
-                  flexShrink:0,
-                  width: isActive ? "55%" : "56px",
-                  transition:"width 0.65s cubic-bezier(0.22,1,0.36,1)",
-                  background: INK,
-                  border:"none",
-                  minHeight: 64,
-                }}
-              >
-                {/* Fondo degradado sutil */}
-                <div style={{
-                  position:"absolute", inset:0,
-                  background: isActive
-                    ? `linear-gradient(160deg, rgba(200,16,46,0.08) 0%, rgba(28,28,28,0) 60%)`
-                    : `rgba(28,28,28,0.0)`,
-                  transition:"background 0.5s ease",
-                }}/>
-
-                {/* Número — siempre visible */}
-                <span style={{
-                  position:"absolute",
-                  top:20, left:20,
-                  fontFamily:"'Courier New', monospace",
-                  fontSize:10, letterSpacing:"0.15em",
-                  color: isActive ? CRIMSON : "rgba(255,255,255,0.2)",
-                  transition:"color 0.4s ease",
-                }}>
-                  0{s.n}
-                </span>
-
-                {/* Barra carmesí en el borde izquierdo cuando activo */}
-                <div style={{
-                  position:"absolute",
-                  left:0, top:0, bottom:0,
-                  width: isActive ? 3 : 0,
-                  background:CRIMSON,
-                  transition:"width 0.4s ease",
-                }}/>
-
-                {/* Título + descripción */}
-                <div style={{
-                  position:"absolute",
-                  bottom:24, left:0, right:0,
-                  display:"flex",
-                  alignItems: isActive ? "flex-start" : "center",
-                  justifyContent:"center",
-                  flexDirection:"column",
-                  padding: isActive ? "0 24px" : "0",
-                  transition:"padding 0.4s ease",
-                }}>
-                  <h3 style={{
-                    fontFamily:"'Playfair Display', serif",
-                    fontWeight:700,
-                    fontSize: isActive ? "clamp(17px,1.8vw,22px)" : 13,
-                    color:WHITE,
-                    margin: "0 0 8px",
-                    lineHeight:1.2,
-                    whiteSpace: isActive ? "normal" : "nowrap",
-                    writingMode: isActive ? "horizontal-tb" : "vertical-rl",
-                    transform: isActive ? "none" : "rotate(180deg)",
-                    transition:"all 0.4s ease",
-                    opacity: isActive ? 1 : 0.7,
+        {/* Desktop: accordion horizontal */}
+        {!isMobile && (
+          <div style={{display:"flex", flexDirection:"row", gap:10, height:420, overflow:"hidden"}}>
+            {SERVICES.map((s,i) => {
+              const isActive = i === activeIdx;
+              return (
+                <div key={s.n} onMouseEnter={()=>setActiveIdx(i)}
+                  style={{
+                    position:"relative", height:"100%", overflow:"hidden",
+                    cursor:"pointer", flexShrink:0,
+                    width: isActive ? "55%" : "56px",
+                    transition:"width 0.65s cubic-bezier(0.22,1,0.36,1)",
+                    background:INK, border:"none", minHeight:64,
                   }}>
-                    {s.title}
-                    {s.soon && isActive && (
-                      <span style={{display:"inline-block",marginLeft:10,fontFamily:"Inter, sans-serif",fontSize:9,fontWeight:700,letterSpacing:"0.14em",textTransform:"uppercase",color:CRIMSON,verticalAlign:"middle",border:`1px solid ${CRIMSON}`,padding:"2px 7px"}}>Próximamente</span>
-                    )}
-                  </h3>
                   <div style={{
-                    overflow:"hidden",
-                    maxHeight: isActive ? 80 : 0,
-                    opacity: isActive ? 1 : 0,
-                    transition:"max-height 0.5s ease, opacity 0.4s ease",
+                    position:"absolute", inset:0,
+                    background: isActive
+                      ? "linear-gradient(160deg, rgba(200,16,46,0.08) 0%, rgba(28,28,28,0) 60%)"
+                      : "transparent",
+                    transition:"background 0.5s ease",
+                  }}/>
+                  <span style={{
+                    position:"absolute", top:20, left:20,
+                    fontFamily:"'Courier New', monospace", fontSize:10,
+                    letterSpacing:"0.15em",
+                    color: isActive ? CRIMSON : "rgba(255,255,255,0.2)",
+                    transition:"color 0.4s ease",
+                  }}>0{s.n}</span>
+                  <div style={{
+                    position:"absolute", left:0, top:0, bottom:0,
+                    width: isActive ? 3 : 0, background:CRIMSON,
+                    transition:"width 0.4s ease",
+                  }}/>
+                  <div style={{
+                    position:"absolute", bottom:24, left:0, right:0,
+                    display:"flex", flexDirection:"column",
+                    alignItems: isActive ? "flex-start" : "center",
+                    justifyContent:"center",
+                    padding: isActive ? "0 24px" : "0",
+                    transition:"padding 0.4s ease",
                   }}>
-                    <p style={{fontFamily:"Inter, sans-serif",fontSize:13,lineHeight:1.7,color:"rgba(255,255,255,0.55)",margin:0}}>
+                    <h3 style={{
+                      fontFamily:"'Playfair Display', serif", fontWeight:700,
+                      fontSize: isActive ? "clamp(17px,1.8vw,22px)" : 13,
+                      color:WHITE, margin:"0 0 8px", lineHeight:1.2,
+                      whiteSpace: isActive ? "normal" : "nowrap",
+                      writingMode: isActive ? "horizontal-tb" : "vertical-rl",
+                      transform: isActive ? "none" : "rotate(180deg)",
+                      transition:"all 0.4s ease",
+                      opacity: isActive ? 1 : 0.7,
+                    }}>
+                      {s.title}
+                      {s.soon && isActive && (
+                        <span style={{display:"inline-block", marginLeft:10,
+                          fontFamily:"Inter, sans-serif", fontSize:9, fontWeight:700,
+                          letterSpacing:"0.14em", textTransform:"uppercase",
+                          color:CRIMSON, verticalAlign:"middle",
+                          border:`1px solid ${CRIMSON}`, padding:"2px 7px"}}>
+                          Próximamente
+                        </span>
+                      )}
+                    </h3>
+                    <div style={{
+                      overflow:"hidden",
+                      maxHeight: isActive ? 80 : 0,
+                      opacity: isActive ? 1 : 0,
+                      transition:"max-height 0.5s ease, opacity 0.4s ease",
+                    }}>
+                      <p style={{fontFamily:"Inter, sans-serif", fontSize:13,
+                        lineHeight:1.7, color:"rgba(255,255,255,0.55)", margin:0}}>
+                        {s.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Mobile: lista simple limpia */}
+        {isMobile && (
+          <div style={{display:"flex", flexDirection:"column", gap:0}}>
+            <Rule/>
+            {SERVICES.map((s,i) => (
+              <div key={s.n}>
+                <div style={{
+                  display:"grid", gridTemplateColumns:"40px 1fr",
+                  gap:16, padding:"24px 0", alignItems:"start",
+                }}>
+                  <span style={{fontFamily:"'Courier New', monospace",
+                    fontSize:10, color:"rgba(28,28,28,0.25)",
+                    letterSpacing:"0.1em", paddingTop:4}}>
+                    0{s.n}
+                  </span>
+                  <div>
+                    <h3 style={{fontFamily:"'Playfair Display', serif",
+                      fontWeight:700, fontSize:"clamp(18px,5vw,24px)",
+                      color:INK, margin:"0 0 8px", lineHeight:1.2}}>
+                      {s.title}
+                      {s.soon && (
+                        <span style={{display:"inline-block", marginLeft:8,
+                          fontFamily:"Inter, sans-serif", fontSize:9,
+                          fontWeight:700, letterSpacing:"0.12em",
+                          textTransform:"uppercase", color:CRIMSON,
+                          verticalAlign:"middle", border:`1px solid ${CRIMSON}`,
+                          padding:"2px 6px"}}>
+                          Próximamente
+                        </span>
+                      )}
+                    </h3>
+                    <p style={{fontFamily:"Inter, sans-serif", fontSize:13,
+                      lineHeight:1.75, color:MIST, margin:0}}>
                       {s.desc}
                     </p>
                   </div>
                 </div>
+                <Rule/>
               </div>
-            );
-          })}
-        </motion.div>
+            ))}
+          </div>
+        )}
 
       </div>
     </section>
@@ -689,17 +772,16 @@ function Metodologia() {
         <motion.div {...fade} style={{marginBottom:64}}>
           <LineNo n={2} light/>
           <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:WHITE,margin:0,lineHeight:1.15,letterSpacing:"-0.01em"}}>
-            Cómo trabajamos<br/><em style={{color:CRIMSON,fontStyle:"italic"}}>por dentro</em>
+            <WordReveal style={{color:WHITE}}>Cómo trabajamos</WordReveal>
+            <WordReveal delay={0.2} style={{color:CRIMSON, fontStyle:"italic"}}>por dentro</WordReveal>
           </h2>
         </motion.div>
 
         <Rule light/>
 
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:0}}>
-          {STEPS.map((s,i)=>{
-            const f = useFadeUp(i*0.07);
-            return (
-              <motion.div key={s.n} {...f} style={{
+          {STEPS.map((s,i)=>(
+              <div key={s.n} style={{
                 padding:"36px 28px",
                 borderRight: i%3!==2 ? "1px solid rgba(255,255,255,0.07)" : "none",
                 borderBottom:"1px solid rgba(255,255,255,0.07)",
@@ -713,9 +795,8 @@ function Metodologia() {
                 </div>
                 <h3 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:20,color:WHITE,margin:"0 0 12px",lineHeight:1.2}}>{s.title}</h3>
                 <p style={{fontFamily:"Inter, sans-serif",fontSize:13,lineHeight:1.75,color:"rgba(255,255,255,0.45)",margin:0}}>{s.desc}</p>
-              </motion.div>
-            );
-          })}
+              </div>
+          ))}
         </div>
       </div>
     </section>
@@ -742,7 +823,8 @@ function Casos() {
           <div>
             <LineNo n={3}/>
             <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:0,lineHeight:1.15,letterSpacing:"-0.01em"}}>
-              Empresas que<br/>confían en nosotros
+              <WordReveal>Empresas que</WordReveal>
+              <WordReveal delay={0.15}>confían en nosotros</WordReveal>
             </h2>
           </div>
           <div style={{alignSelf:"end"}}>
@@ -819,16 +901,16 @@ function FAQ() {
           <div>
             <LineNo n={4}/>
             <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:0,lineHeight:1.15}}>
-              Preguntas<br/>frecuentes
+              <WordReveal>Preguntas</WordReveal>
+              <WordReveal delay={0.15} style={{color:CRIMSON, fontStyle:"italic"}}>frecuentes</WordReveal>
             </h2>
           </div>
         </motion.div>
         <div>
           {FAQS.map((f,i)=>{
-            const fd = useFadeUp(i*0.05);
             const isOpen = open===i;
             return (
-              <motion.div key={i} {...fd}>
+              <div key={i}>
                 <Rule/>
                 <button onClick={()=>setOpen(isOpen?null:i)}
                   style={{width:"100%",display:"grid",gridTemplateColumns:"80px 1fr auto",gap:32,
@@ -848,7 +930,7 @@ function FAQ() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             );
           })}
           <Rule/>
@@ -873,7 +955,8 @@ function Sobre() {
         <motion.div {...f1} style={{marginBottom:64}}>
           <LineNo n={5} light/>
           <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:WHITE,margin:0,lineHeight:1.15,maxWidth:700}}>
-            Una firma boutique.<br/><em style={{color:CRIMSON}}>Un estándar.</em>
+            <WordReveal style={{color:WHITE}}>Una firma boutique.</WordReveal>
+            <WordReveal delay={0.2} style={{color:CRIMSON, fontStyle:"italic"}}>Un estándar.</WordReveal>
           </h2>
         </motion.div>
 
@@ -921,7 +1004,8 @@ function Precios() {
           <div>
             <LineNo n={6}/>
             <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:0,lineHeight:1.15}}>
-              Un modelo<br/><em style={{color:CRIMSON,fontStyle:"italic"}}>transparente</em>
+              <WordReveal>Un modelo</WordReveal>
+              <WordReveal delay={0.15} style={{color:CRIMSON, fontStyle:"italic"}}>transparente</WordReveal>
             </h2>
           </div>
         </motion.div>
@@ -994,7 +1078,9 @@ function Contacto() {
         <motion.div {...useFadeUp()}>
           <LineNo n={7}/>
           <h2 style={{fontFamily:"'Playfair Display', serif",fontWeight:700,fontSize:"clamp(32px,4vw,52px)",color:INK,margin:"0 0 24px",lineHeight:1.1}}>
-            ¿Listo para<br/>encontrar a tu<br/>próximo líder?
+            <WordReveal>¿Listo para</WordReveal>
+            <WordReveal delay={0.1}>encontrar a tu</WordReveal>
+            <WordReveal delay={0.2} style={{color:CRIMSON, fontStyle:"italic"}}>próximo líder?</WordReveal>
           </h2>
           <Rule style={{marginBottom:24}}/>
           <p style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.85,color:MIST,marginBottom:40,maxWidth:360}}>
@@ -1170,16 +1256,22 @@ export default function App() {
           .testi-divider { display:none !important; }
           /* Accordion en tablet: apilado vertical */
           .services-accordion { flex-direction:column !important; height:auto !important; }
-          .services-accordion > div { width:100% !important; min-height:64px !important; }
+          .services-accordion > div { width:100% !important; min-height:60px !important; max-height:60px !important; overflow:hidden !important; }
+          .services-accordion > div.accordion-active { max-height:300px !important; }
         }
         @media (max-width:560px) {
           section { padding-top:72px !important; padding-bottom:72px !important; padding-left:5% !important; padding-right:5% !important; }
-          /* FAQ: colapsar grid a 1 columna en móvil */
+          /* FAQ */
           .faq-row { grid-template-columns:1fr auto !important; gap:12px !important; }
           .faq-num { display:none !important; }
           .faq-answer { margin-left:0 !important; max-width:100% !important; }
-          /* Accordion mobile */
-          .services-accordion > div { min-height:56px !important; }
+          /* Galería hero — ocultar en móvil para no tapar el texto */
+          .hero-gallery { display:none !important; }
+          /* Accordion mobile — altura fija para colapsados */
+          .services-accordion { gap:6px !important; }
+          .services-accordion > div { min-height:52px !important; max-height:52px !important; }
+          /* El activo puede crecer */
+          .services-accordion > div.accordion-active { max-height:280px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
