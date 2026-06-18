@@ -242,7 +242,9 @@ function Nav() {
     }}>
       <button onClick={()=>window.scrollTo({top:0,behavior:"smooth"})}
         style={{background:"none",border:"none",cursor:"pointer",padding:0}}>
-        <span style={{fontFamily:"'Playfair Display', serif",fontSize:22,fontWeight:700,color:INK,letterSpacing:"0.02em"}}>
+        <span style={{fontFamily:"'Playfair Display', serif",fontSize:22,fontWeight:700,
+          color: scrolled ? INK : CREAM,
+          letterSpacing:"0.02em", transition:"color 0.3s ease"}}>
           Tiey<span style={{color:CRIMSON}}>.</span>
         </span>
       </button>
@@ -255,7 +257,7 @@ function Nav() {
               style={{
                 position:"relative",
                 background:"none", border:"none",
-                color: isActive ? INK : SAND,
+                color: isActive ? (scrolled ? INK : CREAM) : (scrolled ? SAND : 'rgba(250,248,245,0.6)'),
                 fontSize:11,
                 fontFamily:"Inter, sans-serif", fontWeight:600,
                 letterSpacing:"0.1em", textTransform:"uppercase",
@@ -435,7 +437,7 @@ function Servicios() {
 
   return (
     <section id="servicios" style={{background:CREAM,padding:"112px 5%"}}>
-      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"1fr 2fr",gap:48,alignItems:"center"}} className="sobre-grid">
+      <div style={{maxWidth:1280,margin:"0 auto",display:"grid",gridTemplateColumns:"300px 1fr",gap:64,alignItems:"center"}} className="sobre-grid">
 
         {/* Columna izquierda — heading + subtexto */}
         <motion.div {...fade}>
@@ -463,10 +465,11 @@ function Servicios() {
                   overflow:"hidden",
                   cursor:"pointer",
                   flexShrink:0,
-                  width: isActive ? "50%" : "60px",
+                  width: isActive ? "55%" : "56px",
                   transition:"width 0.65s cubic-bezier(0.22,1,0.36,1)",
                   background: INK,
                   border:"none",
+                  minHeight: 64,
                 }}
               >
                 {/* Fondo degradado sutil */}
@@ -709,8 +712,9 @@ function FAQ() {
                 <Rule/>
                 <button onClick={()=>setOpen(isOpen?null:i)}
                   style={{width:"100%",display:"grid",gridTemplateColumns:"80px 1fr auto",gap:32,
-                    padding:"28px 0",background:"none",border:"none",cursor:"pointer",alignItems:"center",textAlign:"left"}}>
-                  <span style={{fontFamily:"'Courier New', monospace",fontSize:10,color:"rgba(28,28,28,0.22)",letterSpacing:"0.1em"}}>0{i+1}</span>
+                    padding:"28px 0",background:"none",border:"none",cursor:"pointer",alignItems:"center",textAlign:"left"}}
+                  className="faq-row">
+                  <span className="faq-num" style={{fontFamily:"'Courier New', monospace",fontSize:10,color:"rgba(28,28,28,0.22)",letterSpacing:"0.1em"}}>0{i+1}</span>
                   <span style={{fontFamily:"'Playfair Display', serif",fontWeight:600,fontSize:"clamp(16px,2vw,22px)",color:INK,lineHeight:1.3}}>{f.q}</span>
                   <span style={{color:isOpen?CRIMSON:SAND,fontSize:20,transition:"transform 0.3s,color 0.2s",
                     transform:isOpen?"rotate(45deg)":"none"}}>+</span>
@@ -719,8 +723,8 @@ function FAQ() {
                   {isOpen && (
                     <motion.div initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}}
                       transition={{duration:0.3,ease:[0.22,1,0.36,1]}}>
-                      <p style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.85,color:MIST,
-                        margin:0,padding:"0 0 28px",paddingLeft:"calc(80px + 32px)",maxWidth:600}}>{f.a}</p>
+                      <p className="faq-answer" style={{fontFamily:"Inter, sans-serif",fontSize:14,lineHeight:1.85,color:MIST,
+                        margin:0,padding:"0 0 28px 0",maxWidth:"calc(100% - 80px - 32px)",marginLeft:"calc(80px + 32px)"}}>{f.a}</p>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1044,12 +1048,18 @@ export default function App() {
           .service-row { grid-template-columns:40px 1fr !important; gap:16px !important; }
           .service-row > *:last-child { grid-column:2; }
           .testi-divider { display:none !important; }
+          /* Accordion en tablet: apilado vertical */
+          .services-accordion { flex-direction:column !important; height:auto !important; }
+          .services-accordion > div { width:100% !important; min-height:64px !important; }
         }
         @media (max-width:560px) {
-          section { padding-top:72px !important; padding-bottom:72px !important; }
-          .services-accordion { flex-direction:column !important; height:auto !important; }
-          .services-accordion > div { width:100% !important; height:120px !important; border-radius:0 !important; }
-          .services-accordion > div[style*="42%"] { height:260px !important; }
+          section { padding-top:72px !important; padding-bottom:72px !important; padding-left:5% !important; padding-right:5% !important; }
+          /* FAQ: colapsar grid a 1 columna en móvil */
+          .faq-row { grid-template-columns:1fr auto !important; gap:12px !important; }
+          .faq-num { display:none !important; }
+          .faq-answer { margin-left:0 !important; max-width:100% !important; }
+          /* Accordion mobile */
+          .services-accordion > div { min-height:56px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           * { animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
