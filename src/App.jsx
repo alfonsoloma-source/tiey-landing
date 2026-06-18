@@ -23,9 +23,16 @@ function useFadeUp(delay=0) {
 }
 
 // Ciclo de palabras — display serif con transición suave
-function TextCycle({ words, interval=2600 }) {
+function TextCycle({ words, interval=2600, onWordChange }) {
   const [idx, setIdx] = useState(0);
-  useEffect(()=>{ const t=setInterval(()=>setIdx(i=>(i+1)%words.length),interval); return()=>clearInterval(t); },[]);
+  useEffect(()=>{
+    const t=setInterval(()=>setIdx(i=>{
+      const next=(i+1)%words.length;
+      onWordChange && onWordChange(words[next]);
+      return next;
+    }),interval);
+    return()=>clearInterval(t);
+  },[]);
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.span key={idx}
@@ -97,6 +104,117 @@ function Btn({ children, variant="primary", onClick, style={} }) {
 
 // ── GeometricSphere — wireframe sphere con parallax de mouse + scroll ────────
 // Port de 21st.dev "Geometric Sphere", paleta editorial crema/carmesí
+// ── ProfileGallery — galería de perfiles 3D sincronizada con TextCycle ────────
+const PROFILE_IMAGES = [
+  { src:"/p1.jpg",  role:"CTO" },
+  { src:"/p2.jpg",  role:"líder tech" },
+  { src:"/p3.jpg",  role:"VP Engineering" },
+  { src:"/p4.jpg",  role:"Head of Product" },
+  { src:"/p5.jpg",  role:"arquitecto cloud" },
+  { src:"/p6.jpg",  role:"líder de datos" },
+  { src:"/p7.jpg",  role:"CTO" },
+  { src:"/p8.jpg",  role:"líder tech" },
+  { src:"/p9.jpg",  role:"VP Engineering" },
+  { src:"/p10.jpg", role:"Head of Product" },
+  { src:"/p11.jpg", role:"arquitecto cloud" },
+  { src:"/p12.jpg", role:"líder de datos" },
+];
+
+function ProfileGallery({ activeRole }) {
+  const [cards, setCards] = useState(() =>
+    Array.from({ length: 6 }, (_, i) => ({
+      id: i,
+      imgIdx: i % PROFILE_IMAGES.length,
+      z: -i * 200,
+      x: [20, -30, 40, -20, 10, -40][i] || 0,
+      y: [-10, 20, -30, 10, -20, 30][i] || 0,
+    }))
+  );
+  const rafRef = useRef(null);
+  const cardsRef = useRef(cards);
+  cardsRef.current = cards;
+
+  useEffect(() => {
+    const SPEED = 0.8;
+    const Z_RANGE = 1200;
+    const tick = () => {
+      setCards(prev => prev.map(c => {
+        let newZ = c.z + SPEED;
+        let imgIdx = c.imgIdx;
+        if (newZ > 300) { newZ -= Z_RANGE; imgIdx = (imgIdx + 1) % PROFILE_IMAGES.length; }
+        return { ...c, z: newZ, imgIdx };
+      }));
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  return (
+    <div style={{
+      position:"absolute", right:0, top:0, bottom:0, width:"55%",
+      perspective:"900px", perspectiveOrigin:"50% 50%",
+      overflow:"hidden", pointerEvents:"none", zIndex:1,
+    }}>
+      {/* Vignette izquierda para blend con el texto */}
+      <div style={{
+        position:"absolute", left:0, top:0, bottom:0, width:"40%",
+        background:"linear-gradient(to right, rgba(28,28,28,1) 0%, transparent 100%)",
+        zIndex:10, pointerEvents:"none",
+      }}/>
+      {/* Vignette top/bottom */}
+      <div style={{
+        position:"absolute", inset:0,
+        background:"linear-gradient(to bottom, rgba(28,28,28,0.7) 0%, transparent 25%, transparent 75%, rgba(28,28,28,0.7) 100%)",
+        zIndex:10, pointerEvents:"none",
+      }}/>
+      {cards.map(card => {
+        const z = card.z;
+        const rawT = (z + 1200) / 1400;
+        const fadeIn  = Math.min(1, rawT * 3);
+        const fadeOut = z > 100 ? Math.max(0, 1 - (z - 100) / 200) : 1;
+        const opacity = Math.max(0, Math.min(0.9, fadeIn * fadeOut));
+        const blur    = Math.max(0, (0.5 - rawT) * 12);
+        const img     = PROFILE_IMAGES[card.imgIdx];
+        const isActive = img.role === activeRole;
+        return (
+          <div key={card.id} style={{
+            position:"absolute",
+            left:"50%", top:"50%",
+            width:180, height:220,
+            transform:`translate(-50%,-50%) translate3d(${card.x}px,${card.y}px,${z}px)`,
+            opacity,
+            filter:`blur(${blur}px)`,
+            outline: isActive ? `2px solid ${CRIMSON}` : "none",
+            outlineOffset:2,
+            overflow:"hidden",
+            zIndex: Math.round(z + 1200),
+          }}>
+            <img src={img.src} alt={img.role} style={{
+              width:"100%", height:"100%", objectFit:"cover", display:"block",
+              filter: isActive ? "none" : "grayscale(0.5) brightness(0.7)",
+              transition:"filter 0.5s ease",
+            }} onError={e=>e.target.style.display="none"}/>
+            <div style={{
+              position:"absolute", bottom:0, left:0, right:0,
+              background:"linear-gradient(to top, rgba(28,28,28,0.85), transparent)",
+              padding:"24px 10px 8px",
+            }}/>
+            {isActive && (
+              <span style={{
+                position:"absolute", bottom:8, left:10,
+                fontFamily:"Inter, sans-serif", fontSize:9, fontWeight:700,
+                letterSpacing:"0.14em", textTransform:"uppercase",
+                color:"rgba(255,255,255,0.9)",
+              }}>{img.role}</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── InteractiveDots — canvas de puntos reactivos al cursor (Nexus Hero port) ──
 // Los puntos se iluminan y crecen cuando el mouse pasa cerca
 function InteractiveDots() {
@@ -356,12 +474,14 @@ function Nav() {
 
 // ── Hero — oscuro, headline tipo manifesto ────────────────────────────────────
 function Hero() {
+  const [activeRole, setActiveRole] = useState("CTO");
   return (
     <section id="hero" style={{
       background:INK, minHeight:"100vh", position:"relative",
       display:"flex", flexDirection:"column", justifyContent:"flex-end",
       padding:"0 5% 72px", overflow:"hidden",
     }}>
+      <ProfileGallery activeRole={activeRole} />
       <InteractiveDots />
       {/* Textura de fondo — gradiente sutil */}
       <div style={{
@@ -395,7 +515,7 @@ function Hero() {
           }}>
           Encuentra tu<br/>
           próximo{" "}
-          <TextCycle words={["CTO","líder tech","VP Engineering","Head of Product","arquitecto cloud","líder de datos"]}/>
+          <TextCycle words={["CTO","líder tech","VP Engineering","Head of Product","arquitecto cloud","líder de datos"]} onWordChange={setActiveRole}/>
         </motion.h1>
 
         <Rule light style={{marginBottom:48}}/>
