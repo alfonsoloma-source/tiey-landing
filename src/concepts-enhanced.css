@@ -1,5 +1,5 @@
 .human .hero-thesis{display:block;margin:18px 0 -12px;color:#fff;font-size:13px;letter-spacing:.055em;border-left:2px solid var(--red2);padding-left:13px}
-.brand-wordmark{display:inline-flex;align-items:baseline;color:#fff;font-family:'Plus Jakarta Sans',sans-serif;font-size:28px;font-weight:750;letter-spacing:-.07em;line-height:1}.brand-wordmark>span{color:var(--red2);margin-left:2px}.footer-wordmark{font-size:30px;text-decoration:none}
+.brand .brand-real,.brand-real{display:block;width:116px;height:auto;filter:brightness(0) invert(1)}.footer-logo{width:108px}
 .human .role-slot{display:block;min-height:1.06em}.human .role-cycle{display:block;animation:roleSoftIn .38s ease both}
 .human .hero{min-height:690px;padding-top:46px;padding-bottom:38px}
 .human .hero-copy>p{margin:24px 0}.human .proof{margin-top:48px}
