@@ -40,7 +40,7 @@ const faqs = [
 
 function Header() {
   return <header className="nav">
-    <a href="#top" className="brand" aria-label="Tiey — inicio"><span className="brand-wordmark">Tiey<span>.</span></span></a>
+    <a href="#top" className="brand" aria-label="Tiey — inicio"><img className="brand-real" src="/tiey-logo-real.svg" alt="Tiey" /></a>
     <nav><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#diferencia">Por qué Tiey</a><a href="#faq">FAQ</a></nav>
     <a className="nav-cta" href="#contacto">Hablemos</a>
   </header>;
@@ -118,7 +118,7 @@ function Contact() {
   return <section id="contacto" className="section contact"><div><span className="eyebrow">HABLEMOS</span><h2>Hablemos de la posición que <em>necesitas cubrir.</em></h2><p>Cuéntanos sobre tu búsqueda y responderemos en menos de 24 horas.</p><a href="mailto:hola@tiey.cc">hola@tiey.cc</a><a href="https://tiey.cc">tiey.cc</a></div><form onSubmit={submit}><div><input name="nombre" placeholder="Nombre completo" required/><input name="email" type="email" placeholder="Correo corporativo" required/></div><div><input name="empresa" placeholder="Empresa" required/><input name="telefono" type="tel" placeholder="Teléfono (opcional)"/></div><input name="puesto" placeholder="Puesto que necesitas cubrir" required/><textarea name="mensaje" placeholder="Cuéntanos más sobre el reto, el equipo y el perfil ideal" required/><button className="primary" disabled={status==="sending"}>{status==="sending"?"Enviando…":"Enviar solicitud"} <span>→</span></button>{message&&<p className={`form-status ${status}`} role="status">{message}</p>}</form></section>
 }
 
-function Footer(){ return <footer><a href="#top" className="brand-wordmark footer-wordmark" aria-label="Tiey — inicio">Tiey<span>.</span></a><p>Firma boutique de búsqueda de talento tech y digital.</p><div><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#faq">FAQ</a><a href="#contacto">Contacto</a></div><small>© 2026 Tiey. Todos los derechos reservados.</small></footer> }
+function Footer(){ return <footer><a href="#top" aria-label="Tiey — inicio"><img className="brand-real footer-logo" src="/tiey-logo-real.svg" alt="Tiey" /></a><p>Firma boutique de búsqueda de talento tech y digital.</p><div><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#faq">FAQ</a><a href="#contacto">Contacto</a></div><small>© 2026 Tiey. Todos los derechos reservados.</small></footer> }
 
 export default function App(){
   const n="3";
