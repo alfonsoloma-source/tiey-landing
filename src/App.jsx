@@ -99,25 +99,55 @@ function FAQ() { const [open,setOpen]=useState(null); return <section id="faq" c
 function Contact() {
   const [status,setStatus]=useState("idle");
   const [message,setMessage]=useState("");
-  const [startedAt]=useState(()=>Date.now());
   const submit=async e=>{
-    e.preventDefault(); setStatus("sending"); setMessage("");
+    e.preventDefault();
+    if(!e.currentTarget.reportValidity()) return;
+    setStatus("sending"); setMessage("");
     const form=new FormData(e.currentTarget);
     const payload=Object.fromEntries(form.entries());
-    payload.started_at=startedAt;
+
+    if(payload.website){
+      window.location.assign("/gracias");
+      return;
+    }
+
+    const accessKey=import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+    if(!accessKey){
+      setStatus("error");
+      setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");
+      return;
+    }
+
     try{
-      const response=await fetch("/api/contact",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+      const response=await fetch("https://api.web3forms.com/submit",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Accept":"application/json"},
+        body:JSON.stringify({
+          access_key:accessKey,
+          subject:`Nueva búsqueda desde tiey.cc — ${payload.empresa || "Contacto"}`,
+          from_name:"Tiey — Formulario web",
+          name:payload.nombre,
+          email:payload.email,
+          empresa:payload.empresa,
+          telefono:payload.telefono || "",
+          puesto:payload.puesto,
+          message:payload.mensaje || "Sin mensaje adicional",
+          privacy_consent:payload.privacy_consent,
+        })
+      });
       const data=await response.json();
       if(!response.ok||!data.success) throw new Error("submit");
       window.va?.("event",{name:"contact_form_success"});
       window.location.assign("/gracias");
-    }catch{setStatus("error");setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");}
+    }catch{
+      setStatus("error");
+      setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");
+    }
   };
-  return <section id="contacto" className="section contact"><div><span className="eyebrow">HABLEMOS</span><h2>Hablemos de la posición que <em>necesitas cubrir.</em></h2><p>Cuéntanos sobre tu búsqueda y responderemos en menos de 24 horas.</p><a href="mailto:hola@tiey.cc">hola@tiey.cc</a><a href="https://tiey.cc">tiey.cc</a></div><form onSubmit={submit} noValidate><div><label>Nombre completo<input name="nombre" autoComplete="name" required maxLength="100"/></label><label>Correo corporativo<input name="email" type="email" autoComplete="email" required maxLength="160"/></label></div><div><label>Empresa<input name="empresa" autoComplete="organization" required maxLength="120"/></label><label>Teléfono <small>(opcional)</small><input name="telefono" type="tel" autoComplete="tel" maxLength="30"/></label></div><label>Puesto que necesitas cubrir<input name="puesto" required maxLength="140"/></label><label>Cuéntanos sobre el reto<textarea name="mensaje" placeholder="Equipo, contexto y perfil ideal" required maxLength="2000"/></label><label className="hp-field" aria-hidden="true">Sitio web<input name="website" tabIndex="-1" autoComplete="off"/></label><label className="consent"><input name="privacy_consent" type="checkbox" value="accepted" required/><span>He leído y acepto el <a href="/privacidad">aviso de privacidad</a>.</span></label><button className="primary" disabled={status==="sending"}>{status==="sending"?"Enviando…":"Enviar solicitud"} <span>→</span></button>{message&&<p className={`form-status ${status}`} role="status">{message}</p>}</form></section>
+  return <section id="contacto" className="section contact"><div><span className="eyebrow">HABLEMOS</span><h2>Hablemos de la posición que <em>necesitas cubrir.</em></h2><p>Cuéntanos sobre tu búsqueda y responderemos en menos de 24 horas.</p><a href="mailto:hola@tiey.cc">hola@tiey.cc</a><a href="https://tiey.cc">tiey.cc</a></div><form onSubmit={submit}><div><label>Nombre completo<input name="nombre" autoComplete="name" required maxLength="100"/></label><label>Correo corporativo<input name="email" type="email" autoComplete="email" required maxLength="160"/></label></div><div><label>Empresa<input name="empresa" autoComplete="organization" required maxLength="120"/></label><label>Teléfono <small>(opcional)</small><input name="telefono" type="tel" autoComplete="tel" maxLength="30"/></label></div><label>Puesto que necesitas cubrir<input name="puesto" required maxLength="140"/></label><label>Cuéntanos sobre el reto<textarea name="mensaje" placeholder="Equipo, contexto y perfil ideal" maxLength="2000"/></label><label className="hp-field" aria-hidden="true">Sitio web<input name="website" tabIndex="-1" autoComplete="off"/></label><label className="consent"><input name="privacy_consent" type="checkbox" value="accepted" required/><span>He leído y acepto el <a href="/privacidad">aviso de privacidad</a>.</span></label><button className="primary" disabled={status==="sending"}>{status==="sending"?"Enviando…":"Enviar solicitud"} <span>→</span></button>{message&&<p className={`form-status ${status}`} role="status">{message}</p>}</form></section>
 }
 
 function Footer(){ return <footer><a href="/" aria-label="Tiey — inicio"><img className="brand-real footer-logo" src="/tiey-logo-real.svg" alt="Tiey" /></a><p>Firma boutique de búsqueda de talento tech y digital.</p><div><a href="/#servicios">Servicios</a><a href="/#proceso">Proceso</a><a href="/#faq">FAQ</a><a href="/#contacto">Contacto</a><a href="/privacidad">Privacidad</a><a href="/terminos">Términos</a></div><small>© 2026 Tiey. Todos los derechos reservados.</small></footer> }
-
 function SetPageMeta({title,description,robots="index,follow"}){useEffect(()=>{document.title=title;document.querySelector('meta[name="description"]')?.setAttribute("content",description);document.querySelector('meta[name="robots"]')?.setAttribute("content",robots);window.scrollTo(0,0)},[title,description,robots]);return null}
 function InnerHeader(){return <header className="nav"><a href="/" className="brand" aria-label="Tiey — inicio"><img className="brand-real" src="/tiey-logo-real.svg" alt="Tiey"/></a><a className="nav-cta" href="/#contacto">Hablemos</a></header>}
 function LegalPage({type}){const privacy=type==="privacy";return <main className="concept human"><SetPageMeta title={`${privacy?"Aviso de privacidad":"Términos de uso"} — Tiey`} description={`${privacy?"Aviso de privacidad":"Términos de uso"} del sitio web de Tiey.`}/><InnerHeader/><article className="legal"><span className="eyebrow">INFORMACIÓN LEGAL</span><h1>{privacy?"Aviso de privacidad":"Términos de uso"}</h1>{privacy?<><p>Tiey, persona física con domicilio en Apodaca, Nuevo León, México, es responsable del tratamiento de los datos personales que recibimos mediante este sitio.</p><h2>Datos y finalidad</h2><p>Podemos tratar nombre, correo, teléfono, empresa, puesto y la información que compartas para responder tu solicitud, evaluar la búsqueda de talento y mantener comunicación relacionada con nuestros servicios.</p><h2>Transferencias y conservación</h2><p>Utilizamos proveedores tecnológicos necesarios para recibir y alojar la información. Conservaremos tus datos sólo durante el tiempo razonablemente necesario para atender la solicitud y cumplir obligaciones aplicables.</p><h2>Tus derechos</h2><p>Puedes solicitar acceso, rectificación, cancelación u oposición, así como revocar tu consentimiento, escribiendo a <a href="mailto:hola@tiey.cc">hola@tiey.cc</a>. Indicaremos cualquier actualización material de este aviso en esta página.</p></>:<><p>Al navegar en tiey.cc aceptas usar el sitio únicamente con fines lícitos. La información publicada es general y no constituye una oferta contractual.</p><h2>Servicios y contenidos</h2><p>El alcance, honorarios, tiempos y condiciones de cada búsqueda se establecerán por escrito con cada cliente. Las marcas, textos y elementos visuales del sitio pertenecen a Tiey o se utilizan con autorización.</p><h2>Disponibilidad y contacto</h2><p>Podemos actualizar o suspender contenidos del sitio. Para preguntas sobre estos términos, escribe a <a href="mailto:hola@tiey.cc">hola@tiey.cc</a>.</p></>}</article><Footer/></main>}
