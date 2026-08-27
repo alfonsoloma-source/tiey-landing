@@ -44,7 +44,6 @@ export default async function handler(req, res) {
   };
 
   console.log(JSON.stringify({ level: "info", msg: "contact_start", route: "/api/contact", requestId }));
-
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
 
@@ -77,14 +76,11 @@ export default async function handler(req, res) {
   }
   if (serializedSize > MAX_BODY_BYTES) return reject(413, "payload_too_large");
 
-  // Honeypot: bots commonly fill hidden fields. Return success so they do not retry.
   if (clean(body.website, 200)) {
     console.warn(JSON.stringify({ level: "warn", msg: "contact_honeypot", route: "/api/contact", requestId }));
     return json(res, 200, { success: true });
   }
 
-  // Do not reject legitimate users based on client/server clock differences.
-  // `started_at` remains optional telemetry only; honeypot + rate limiting provide the anti-abuse gate.
   const startedAt = Number(body.started_at || 0);
   if (Number.isFinite(startedAt) && startedAt > 0) {
     const elapsed = start - startedAt;
@@ -99,7 +95,7 @@ export default async function handler(req, res) {
     empresa: clean(body.empresa, 120),
     telefono: clean(body.telefono, 30),
     puesto: clean(body.puesto, 140),
-    mensaje: clean(body.mensaje, 2000),
+    mensaje: clean(body.mensaje, 2000) || "Sin mensaje adicional",
   };
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email);
@@ -110,7 +106,6 @@ export default async function handler(req, res) {
   if (!data.empresa) return reject(400, "missing_company");
   if (!phoneOk) return reject(400, "invalid_phone");
   if (!data.puesto) return reject(400, "missing_role");
-  if (!data.mensaje) return reject(400, "missing_message");
   if (body.privacy_consent !== "accepted") return reject(400, "privacy_not_accepted");
 
   if (!process.env.WEB3FORMS_ACCESS_KEY) {
