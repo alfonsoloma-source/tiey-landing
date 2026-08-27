@@ -38,6 +38,11 @@ const isRateLimited = (key, now) => {
 export default async function handler(req, res) {
   const start = Date.now();
   const requestId = req.headers["x-vercel-id"] || "local";
+  const reject = (status, reason, extraHeaders = {}) => {
+    console.warn(JSON.stringify({ level: "warn", msg: "contact_rejected", route: "/api/contact", requestId, reason }));
+    return json(res, status, { success: false }, extraHeaders);
+  };
+
   console.log(JSON.stringify({ level: "info", msg: "contact_start", route: "/api/contact", requestId }));
 
   res.setHeader("Cache-Control", "no-store");
@@ -45,17 +50,17 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
-    return json(res, 405, { success: false });
+    return reject(405, "method_not_allowed");
   }
 
   const origin = req.headers.origin;
-  if (!origin || !allowedOrigins.has(origin)) return json(res, 403, { success: false });
+  if (!origin || !allowedOrigins.has(origin)) return reject(403, "origin_not_allowed");
 
   const contentType = String(req.headers["content-type"] || "").toLowerCase();
-  if (!contentType.startsWith("application/json")) return json(res, 415, { success: false });
+  if (!contentType.startsWith("application/json")) return reject(415, "invalid_content_type");
 
   const contentLength = Number(req.headers["content-length"] || 0);
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) return json(res, 413, { success: false });
+  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) return reject(413, "payload_too_large");
 
   const ip = clientIp(req);
   if (isRateLimited(ip, start)) {
@@ -68,14 +73,25 @@ export default async function handler(req, res) {
   try {
     serializedSize = Buffer.byteLength(JSON.stringify(body), "utf8");
   } catch {
-    return json(res, 400, { success: false });
+    return reject(400, "invalid_payload");
   }
-  if (serializedSize > MAX_BODY_BYTES) return json(res, 413, { success: false });
+  if (serializedSize > MAX_BODY_BYTES) return reject(413, "payload_too_large");
 
-  if (clean(body.website, 200)) return json(res, 200, { success: true });
+  // Honeypot: bots commonly fill hidden fields. Return success so they do not retry.
+  if (clean(body.website, 200)) {
+    console.warn(JSON.stringify({ level: "warn", msg: "contact_honeypot", route: "/api/contact", requestId }));
+    return json(res, 200, { success: true });
+  }
 
-  const elapsed = start - Number(body.started_at || 0);
-  if (!Number.isFinite(elapsed) || elapsed < 2500 || elapsed > 86400000) return json(res, 400, { success: false });
+  // Do not reject legitimate users based on client/server clock differences.
+  // `started_at` remains optional telemetry only; honeypot + rate limiting provide the anti-abuse gate.
+  const startedAt = Number(body.started_at || 0);
+  if (Number.isFinite(startedAt) && startedAt > 0) {
+    const elapsed = start - startedAt;
+    if (elapsed < 0 || elapsed > 86400000) {
+      console.warn(JSON.stringify({ level: "warn", msg: "contact_clock_skew", route: "/api/contact", requestId }));
+    }
+  }
 
   const data = {
     nombre: clean(body.nombre, 100),
@@ -88,9 +104,14 @@ export default async function handler(req, res) {
 
   const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email);
   const phoneOk = !data.telefono || /^[0-9+()\-\.\s]{7,30}$/.test(data.telefono);
-  if (!data.nombre || !emailOk || !phoneOk || !data.empresa || !data.puesto || !data.mensaje || body.privacy_consent !== "accepted") {
-    return json(res, 400, { success: false });
-  }
+
+  if (!data.nombre) return reject(400, "missing_name");
+  if (!emailOk) return reject(400, "invalid_email");
+  if (!data.empresa) return reject(400, "missing_company");
+  if (!phoneOk) return reject(400, "invalid_phone");
+  if (!data.puesto) return reject(400, "missing_role");
+  if (!data.mensaje) return reject(400, "missing_message");
+  if (body.privacy_consent !== "accepted") return reject(400, "privacy_not_accepted");
 
   if (!process.env.WEB3FORMS_ACCESS_KEY) {
     console.error(JSON.stringify({ level: "error", msg: "contact_missing_key", route: "/api/contact", requestId }));
