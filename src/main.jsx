@@ -24,23 +24,27 @@ function Site(){
       proof.className="client-proof";
       proof.setAttribute("aria-labelledby","client-proof-title");
       proof.innerHTML=`
-        <div class="client-proof__intro">
+        <div class="client-proof__head">
           <span class="eyebrow">CLIENTES</span>
-          <h2 id="client-proof-title">Empresas que han confiado <em>en Tiey.</em></h2>
+          <h2 id="client-proof-title">Búsquedas distintas para <em>un mismo equipo.</em></h2>
         </div>
         <div class="client-proof__case">
-          <div class="client-proof__identity">
-            <a class="client-proof__logo-wrap" href="https://raidar.io/es" target="_blank" rel="noopener noreferrer" aria-label="Visitar sitio de Raidar">
-              <img class="client-proof__logo" src="https://raidar.io/_next/image?q=75&url=%2Flogos%2Fraidar-full-dark.png&w=384" alt="Raidar" loading="lazy" />
-            </a>
-            <div class="client-proof__count"><strong>3</strong><span>contrataciones</span></div>
+          <div class="client-proof__brand">
+            <div>
+              <small>RAIDAR</small>
+              <a class="client-proof__logo-wrap" href="https://raidar.io/es" target="_blank" rel="noopener noreferrer" aria-label="Visitar sitio de Raidar">
+                <img class="client-proof__logo" src="/raidar-full-dark.webp" alt="Raidar" loading="lazy" />
+              </a>
+            </div>
+            <div><strong>03</strong><span>contrataciones</span></div>
           </div>
-          <div class="client-proof__detail">
-            <p>Para Raidar cubrimos posiciones en tres áreas distintas:</p>
+          <div class="client-proof__story">
+            <h3>Tres áreas, tres perfiles distintos.</h3>
+            <p>Raidar confió en Tiey para sumar talento en diseño UX/UI, desarrollo mobile y administración.</p>
             <div class="client-proof__roles">
-              <span>UX/UI Design</span>
-              <span>Mobile Development</span>
-              <span>Administración</span>
+              <div><small>01 · DISEÑO</small><b>UX/UI Design</b></div>
+              <div><small>02 · TECNOLOGÍA</small><b>Mobile Development</b></div>
+              <div><small>03 · ADMINISTRACIÓN</small><b>Administración</b></div>
             </div>
           </div>
         </div>`;
