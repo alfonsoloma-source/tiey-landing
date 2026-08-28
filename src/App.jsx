@@ -15,14 +15,14 @@ const concepts = {
 };
 
 const services = [
-  ["Búsqueda especializada", "Encontramos perfiles clave en tecnología, producto, datos, diseño y marketing digital."],
+  ["Búsqueda especializada", "Encontramos perfiles profesionales y especializados en ingeniería, tecnología, producto, datos, diseño, marketing, comercial y otras funciones clave para el negocio."],
   ["Proceso a medida y sin atajos", "Diseñamos cada búsqueda desde el contexto, la cultura y los objetivos reales del negocio."],
   ["Búsquedas confidenciales", "Mapeo discreto de mercado y acercamiento directo a talento que no está buscando activamente."],
   ["Garantía de 3 meses", "Si la contratación no funciona, repetimos la búsqueda sin honorarios adicionales."],
 ];
 const audiences = [
-  ["Startups en crecimiento", "Que necesitan sumar liderazgo sin margen para una mala contratación."],
-  ["Equipos que escalan", "Que buscan talento senior capaz de elevar al equipo y acelerar resultados."],
+  ["PyMEs y empresas en crecimiento", "Que necesitan sumar talento clave sin convertir cada vacante en un proceso improvisado."],
+  ["Equipos que escalan", "Que buscan perfiles profesionales o especializados capaces de elevar al equipo y acelerar resultados."],
   ["Búsquedas críticas", "Posiciones estratégicas, confidenciales o difíciles de cubrir por canales tradicionales."],
 ];
 const steps = [
@@ -32,10 +32,10 @@ const steps = [
   ["Acompañamiento", "Entrevistas, cierre, integración y garantía de 3 meses."],
 ];
 const faqs = [
-  ["¿Qué tipo de posiciones cubren?", "Roles especializados y de liderazgo en tecnología, producto, datos, diseño y marketing digital."],
+  ["¿Qué tipo de posiciones cubren?", "En búsqueda especializada trabajamos perfiles profesionales y de liderazgo en ingeniería, tecnología, producto, datos, diseño, marketing, comercial y otras funciones clave. Para ayudantes generales, operadores, almacén y otros perfiles operativos contamos con una línea específica de reclutamiento operativo y de volumen."],
   ["¿Cuánto tarda una búsqueda?", "Depende de la complejidad; definimos expectativas y ritmo desde el diagnóstico inicial."],
-  ["¿Cómo funciona la garantía?", "Si la persona contratada sale durante los primeros 3 meses, repetimos la búsqueda sin honorarios adicionales."],
-  ["¿Trabajan con startups y PyMEs?", "Sí. Adaptamos el proceso a la etapa, estructura y urgencia de cada empresa."],
+  ["¿Cómo funciona la garantía?", "Si la persona contratada sale durante los primeros 3 meses, repetimos la búsqueda sin honorarios adicionales en los servicios donde la garantía forme parte del alcance acordado."],
+  ["¿Trabajan con startups y PyMEs?", "Sí. Adaptamos el proceso a la etapa, estructura, volumen y urgencia de cada empresa."],
 ];
 
 function Header() {
@@ -47,7 +47,7 @@ function Header() {
 }
 
 function Hero({ variant }) {
-  const roles = ["líder especializado.", "CTO.", "Head of Product.", "líder de datos."];
+  const roles = ["líder especializado.", "líder de ingeniería.", "Head of Product.", "líder comercial."];
   const profileImages = ["/p2.jpg", "/p1.jpg", "/p7.jpg", "/p10.jpg"];
   const [role,setRole] = useState(0);
   useEffect(()=>{
@@ -60,9 +60,9 @@ function Hero({ variant }) {
       <span className="eyebrow">BÚSQUEDA DE TALENTO · MÉXICO</span>
       <h1>Encuentra a tu próximo <em className="role-slot"><span key={role} className="role-cycle">{variant==="3"?roles[role]:roles[0]}</span></em></h1>
       {variant === "3" && <span className="hero-thesis">Encontramos a la persona que cambia el equipo.</span>}
-      <p>Somos una <strong>firma boutique</strong> de búsqueda de talento tech y digital. Proceso a medida, sin atajos, con garantía de <strong>3 meses.</strong></p>
+      <p>Somos una <strong>firma boutique</strong> de búsqueda de talento profesional y especializado. Trabajamos búsquedas a medida y contamos con una línea específica para reclutamiento operativo y de volumen.</p>
       <div className="hero-actions"><a href="#contacto" className="primary">Cuéntanos tu búsqueda <span>→</span></a><a href="#proceso" className="text-link">Conoce el proceso</a></div>
-      <div className="proof"><div>Búsqueda<br/>especializada</div><div>Proceso a medida<br/>y sin atajos</div><div>Garantía de<br/><strong>3 meses</strong></div></div>
+      <div className="proof"><div>Búsqueda<br/>especializada</div><div>Proceso a medida<br/>y sin atajos</div><div>Garantía de<br/><strong>3 meses*</strong></div></div>
     </motion.div>
     <motion.div className={`hero-visual ${variant === "3" ? "search-visual" : ""}`} initial={{opacity:0,scale:.96}} animate={{opacity:1,scale:1}} transition={{duration:1,delay:.2}}>
       {variant !== "3" ? <><div className="letter">T</div><img src="/p1.jpg" alt="Líder especializado" /></> : <>
@@ -75,7 +75,7 @@ function Hero({ variant }) {
         <div className="search-progress"><span /><small>Mapeo · Evaluación · Shortlist</small></div>
       </>}
     </motion.div>
-    {variant === "3" && <div className="roles"><div className="roles-track">{[0,1].map(copy=><div className="roles-set" key={copy} aria-hidden={copy===1}>{["PRODUCT MANAGER","DATA SCIENTIST","SOFTWARE ENGINEER","UX/UI DESIGNER","GROWTH LEAD"].map(label=><span key={`${copy}-${label}`}>{label}</span>)}</div>)}</div></div>}
+    {variant === "3" && <div className="roles"><div className="roles-track">{[0,1].map(copy=><div className="roles-set" key={copy} aria-hidden={copy===1}>{["INGENIERÍA","PRODUCTO","DATOS","DISEÑO","MARKETING","COMERCIAL"].map(label=><span key={`${copy}-${label}`}>{label}</span>)}</div>)}</div></div>}
   </section>;
 }
 
@@ -90,9 +90,9 @@ function Audience() { return <section className="section audience"><div classNam
 
 function Process() { return <section id="proceso" className="section process"><div className="section-head"><span className="eyebrow">NUESTRO PROCESO</span><h2>Un proceso claro. <em>Resultados que se quedan.</em></h2></div><div className="timeline">{steps.map((s,i)=><motion.article key={s[0]} initial={{opacity:.45}} whileInView={{opacity:1}} whileHover={{y:-9}} transition={{duration:.3,ease:[.22,1,.36,1]}} viewport={{once:true,amount:.8}}><span>0{i+1}</span><h3>{s[0]}</h3><p>{s[1]}</p></motion.article>)}</div></section> }
 
-function Results({variant}) { if(variant!=="3") return null; return <section className="section results"><div className="result-intro"><span className="eyebrow">LO QUE PUEDES ESPERAR</span><h2>Menos ruido.<br/><em>Mejores decisiones.</em></h2></div><div className="result-metrics"><article><strong>3–5</strong><span>perfiles relevantes en la shortlist final</span></article><article><strong>1:1</strong><span>comunicación directa durante la búsqueda</span></article><article><strong>3 meses</strong><span>de garantía sobre la contratación</span></article></div></section> }
+function Results({variant}) { if(variant!=="3") return null; return <section className="section results"><div className="result-intro"><span className="eyebrow">LO QUE PUEDES ESPERAR</span><h2>Menos ruido.<br/><em>Mejores decisiones.</em></h2></div><div className="result-metrics"><article><strong>3–5</strong><span>perfiles relevantes en búsquedas especializadas</span></article><article><strong>1:1</strong><span>comunicación directa durante la búsqueda</span></article><article><strong>3 meses*</strong><span>de garantía cuando forme parte del servicio acordado</span></article></div></section> }
 
-function Difference({ variant }) { return <section id="diferencia" className="section difference">{variant === "3" && <img src="/p7.jpg" alt="Líder en contexto de trabajo"/>}<div className="difference-copy"><span className="eyebrow">NUESTRA DIFERENCIA</span><h2>No enviamos currículums.<br/><em>Construimos la búsqueda correcta.</em></h2><div className="manifesto"><div><b>Proceso a medida</b><p>Cada búsqueda comienza desde cero.</p></div><div><b>Evaluación humana</b><p>Entrevistas profundas y referencias reales.</p></div><div><b>Comunicación directa</b><p>Hablas con quien conduce la búsqueda.</p></div><div><b>Garantía 3 meses</b><p>Tu tranquilidad forma parte del servicio.</p></div></div></div></section> }
+function Difference({ variant }) { return <section id="diferencia" className="section difference">{variant === "3" && <img src="/p7.jpg" alt="Líder en contexto de trabajo"/>}<div className="difference-copy"><span className="eyebrow">NUESTRA DIFERENCIA</span><h2>No enviamos currículums.<br/><em>Construimos la búsqueda correcta.</em></h2><div className="manifesto"><div><b>Proceso a medida</b><p>Cada búsqueda comienza desde cero.</p></div><div><b>Evaluación humana</b><p>Entrevistas y revisión de contexto según el tipo de búsqueda.</p></div><div><b>Comunicación directa</b><p>Hablas con quien conduce la búsqueda.</p></div><div><b>Garantía</b><p>Se define de acuerdo con el servicio y alcance contratado.</p></div></div></div></section> }
 
 function FAQ() { const [open,setOpen]=useState(null); return <section id="faq" className="section faq"><div className="section-head"><span className="eyebrow">PREGUNTAS FRECUENTES</span><h2>Resolvemos tus dudas.</h2></div><div>{faqs.map((f,i)=><button key={f[0]} onClick={()=>setOpen(open===i?null:i)}><span>{f[0]}</span><b>{open===i?"−":"+"}</b>{open===i&&<motion.p initial={{opacity:0}} animate={{opacity:1}}>{f[1]}</motion.p>}</button>)}</div></section> }
 
@@ -106,53 +106,25 @@ function Contact() {
     const form=new FormData(e.currentTarget);
     const payload=Object.fromEntries(form.entries());
 
-    if(payload.website){
-      window.location.assign("/gracias");
-      return;
-    }
-
+    if(payload.website){window.location.assign("/gracias");return;}
     const accessKey=import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-    if(!accessKey){
-      setStatus("error");
-      setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");
-      return;
-    }
-
+    if(!accessKey){setStatus("error");setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");return;}
     try{
-      const response=await fetch("https://api.web3forms.com/submit",{
-        method:"POST",
-        headers:{"Content-Type":"application/json","Accept":"application/json"},
-        body:JSON.stringify({
-          access_key:accessKey,
-          subject:`Nueva búsqueda desde tiey.cc — ${payload.empresa || "Contacto"}`,
-          from_name:"Tiey — Formulario web",
-          name:payload.nombre,
-          email:payload.email,
-          empresa:payload.empresa,
-          telefono:payload.telefono || "",
-          puesto:payload.puesto,
-          message:payload.mensaje || "Sin mensaje adicional",
-          privacy_consent:payload.privacy_consent,
-        })
-      });
+      const response=await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({access_key:accessKey,subject:`Nueva solicitud desde tiey.cc — ${payload.empresa || "Contacto"}`,from_name:"Tiey — Formulario web",name:payload.nombre,email:payload.email,empresa:payload.empresa,telefono:payload.telefono || "",puesto:payload.puesto,message:payload.mensaje || "Sin mensaje adicional",privacy_consent:payload.privacy_consent})});
       const data=await response.json();
       if(!response.ok||!data.success) throw new Error("submit");
-      window.va?.("event",{name:"contact_form_success"});
-      window.location.assign("/gracias");
-    }catch{
-      setStatus("error");
-      setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");
-    }
+      window.va?.("event",{name:"contact_form_success"});window.location.assign("/gracias");
+    }catch{setStatus("error");setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");}
   };
-  return <section id="contacto" className="section contact"><div><span className="eyebrow">HABLEMOS</span><h2>Hablemos de la posición que <em>necesitas cubrir.</em></h2><p>Cuéntanos sobre tu búsqueda y responderemos en menos de 24 horas.</p><a href="mailto:hola@tiey.cc">hola@tiey.cc</a><a href="https://tiey.cc">tiey.cc</a></div><form onSubmit={submit}><div><label>Nombre completo<input name="nombre" autoComplete="name" required maxLength="100"/></label><label>Correo corporativo<input name="email" type="email" autoComplete="email" required maxLength="160"/></label></div><div><label>Empresa<input name="empresa" autoComplete="organization" required maxLength="120"/></label><label>Teléfono <small>(opcional)</small><input name="telefono" type="tel" autoComplete="tel" maxLength="30"/></label></div><label>Puesto que necesitas cubrir<input name="puesto" required maxLength="140"/></label><label>Cuéntanos sobre el reto<textarea name="mensaje" placeholder="Equipo, contexto y perfil ideal" maxLength="2000"/></label><label className="hp-field" aria-hidden="true">Sitio web<input name="website" tabIndex="-1" autoComplete="off"/></label><label className="consent"><input name="privacy_consent" type="checkbox" value="accepted" required/><span>He leído y acepto el <a href="/privacidad">aviso de privacidad</a>.</span></label><button className="primary" disabled={status==="sending"}>{status==="sending"?"Enviando…":"Enviar solicitud"} <span>→</span></button>{message&&<p className={`form-status ${status}`} role="status">{message}</p>}</form></section>
+  return <section id="contacto" className="section contact"><div><span className="eyebrow">HABLEMOS</span><h2>Hablemos de lo que <em>necesitas resolver.</em></h2><p>Cuéntanos sobre la vacante, volumen, capacitación o proceso que quieres mejorar y responderemos en menos de 24 horas.</p><a href="mailto:hola@tiey.cc">hola@tiey.cc</a><a href="https://tiey.cc">tiey.cc</a></div><form onSubmit={submit}><div><label>Nombre completo<input name="nombre" autoComplete="name" required maxLength="100"/></label><label>Correo corporativo<input name="email" type="email" autoComplete="email" required maxLength="160"/></label></div><div><label>Empresa<input name="empresa" autoComplete="organization" required maxLength="120"/></label><label>Teléfono <small>(opcional)</small><input name="telefono" type="tel" autoComplete="tel" maxLength="30"/></label></div><label>Vacante o servicio que necesitas<input name="puesto" required maxLength="140" placeholder="Ej. Ingeniero de calidad, 20 operadores, capacitación..."/></label><label>Cuéntanos sobre el reto<textarea name="mensaje" placeholder="Contexto, ubicación, volumen o necesidad" maxLength="2000"/></label><label className="hp-field" aria-hidden="true">Sitio web<input name="website" tabIndex="-1" autoComplete="off"/></label><label className="consent"><input name="privacy_consent" type="checkbox" value="accepted" required/><span>He leído y acepto el <a href="/privacidad">aviso de privacidad</a>.</span></label><button className="primary" disabled={status==="sending"}>{status==="sending"?"Enviando…":"Enviar solicitud"} <span>→</span></button>{message&&<p className={`form-status ${status}`} role="status">{message}</p>}</form></section>
 }
 
-function Footer(){ return <footer><a href="/" aria-label="Tiey — inicio"><img className="brand-real footer-logo" src="/tiey-logo-real.svg" alt="Tiey" /></a><p>Firma boutique de búsqueda de talento tech y digital.</p><div><a href="/#servicios">Servicios</a><a href="/#proceso">Proceso</a><a href="/#faq">FAQ</a><a href="/#contacto">Contacto</a><a href="/privacidad">Privacidad</a><a href="/terminos">Términos</a></div><small>© 2026 Tiey. Todos los derechos reservados.</small></footer> }
+function Footer(){ return <footer><a href="/" aria-label="Tiey — inicio"><img className="brand-real footer-logo" src="/tiey-logo-real.svg" alt="Tiey" /></a><p>Reclutamiento especializado, operativo y soluciones para equipos de talento.</p><div><a href="/#servicios">Servicios</a><a href="/reclutamiento-operativo/">Operativo</a><a href="/ia-recruiting/">IA Recruiting</a><a href="/capacitacion/">Capacitación</a><a href="/#contacto">Contacto</a><a href="/privacidad">Privacidad</a><a href="/terminos">Términos</a></div><small>© 2026 Tiey. Todos los derechos reservados.</small></footer> }
 function SetPageMeta({title,description,robots="index,follow"}){useEffect(()=>{document.title=title;document.querySelector('meta[name="description"]')?.setAttribute("content",description);document.querySelector('meta[name="robots"]')?.setAttribute("content",robots);window.scrollTo(0,0)},[title,description,robots]);return null}
 function InnerHeader(){return <header className="nav"><a href="/" className="brand" aria-label="Tiey — inicio"><img className="brand-real" src="/tiey-logo-real.svg" alt="Tiey"/></a><a className="nav-cta" href="/#contacto">Hablemos</a></header>}
-function LegalPage({type}){const privacy=type==="privacy";return <main className="concept human"><SetPageMeta title={`${privacy?"Aviso de privacidad":"Términos de uso"} — Tiey`} description={`${privacy?"Aviso de privacidad":"Términos de uso"} del sitio web de Tiey.`}/><InnerHeader/><article className="legal"><span className="eyebrow">INFORMACIÓN LEGAL</span><h1>{privacy?"Aviso de privacidad":"Términos de uso"}</h1>{privacy?<><p>Tiey, persona física con domicilio en Apodaca, Nuevo León, México, es responsable del tratamiento de los datos personales que recibimos mediante este sitio.</p><h2>Datos y finalidad</h2><p>Podemos tratar nombre, correo, teléfono, empresa, puesto y la información que compartas para responder tu solicitud, evaluar la búsqueda de talento y mantener comunicación relacionada con nuestros servicios.</p><h2>Transferencias y conservación</h2><p>Utilizamos proveedores tecnológicos necesarios para recibir y alojar la información. Conservaremos tus datos sólo durante el tiempo razonablemente necesario para atender la solicitud y cumplir obligaciones aplicables.</p><h2>Tus derechos</h2><p>Puedes solicitar acceso, rectificación, cancelación u oposición, así como revocar tu consentimiento, escribiendo a <a href="mailto:hola@tiey.cc">hola@tiey.cc</a>. Indicaremos cualquier actualización material de este aviso en esta página.</p></>:<><p>Al navegar en tiey.cc aceptas usar el sitio únicamente con fines lícitos. La información publicada es general y no constituye una oferta contractual.</p><h2>Servicios y contenidos</h2><p>El alcance, honorarios, tiempos y condiciones de cada búsqueda se establecerán por escrito con cada cliente. Las marcas, textos y elementos visuales del sitio pertenecen a Tiey o se utilizan con autorización.</p><h2>Disponibilidad y contacto</h2><p>Podemos actualizar o suspender contenidos del sitio. Para preguntas sobre estos términos, escribe a <a href="mailto:hola@tiey.cc">hola@tiey.cc</a>.</p></>}</article><Footer/></main>}
-function Thanks(){return <main className="concept human"><SetPageMeta title="Solicitud recibida — Tiey" description="Confirmación de solicitud enviada a Tiey." robots="noindex,nofollow"/><InnerHeader/><section className="status-page"><span className="eyebrow">SOLICITUD RECIBIDA</span><h1>Gracias por contarnos sobre tu búsqueda.</h1><p>Revisaremos el contexto y te contactaremos en menos de 24 horas.</p><a className="primary" href="/">Volver al inicio <span>→</span></a></section><Footer/></main>}
-function NotFound(){return <main className="concept human"><SetPageMeta title="Página no encontrada — Tiey" description="La página solicitada no existe." robots="noindex,nofollow"/><InnerHeader/><section className="status-page"><span className="eyebrow">ERROR 404</span><h1>Esta página no existe.</h1><p>Regresa al inicio o cuéntanos sobre la posición que necesitas cubrir.</p><a className="primary" href="/">Volver al inicio <span>→</span></a></section><Footer/></main>}
+function LegalPage({type}){const privacy=type==="privacy";return <main className="concept human"><SetPageMeta title={`${privacy?"Aviso de privacidad":"Términos de uso"} — Tiey`} description={`${privacy?"Aviso de privacidad":"Términos de uso"} del sitio web de Tiey.`}/><InnerHeader/><article className="legal"><span className="eyebrow">INFORMACIÓN LEGAL</span><h1>{privacy?"Aviso de privacidad":"Términos de uso"}</h1>{privacy?<><p>Tiey, persona física con domicilio en Apodaca, Nuevo León, México, es responsable del tratamiento de los datos personales que recibimos mediante este sitio.</p><h2>Datos y finalidad</h2><p>Podemos tratar nombre, correo, teléfono, empresa, puesto y la información que compartas para responder tu solicitud, evaluar la búsqueda de talento y mantener comunicación relacionada con nuestros servicios.</p><h2>Transferencias y conservación</h2><p>Utilizamos proveedores tecnológicos necesarios para recibir y alojar la información. Conservaremos tus datos sólo durante el tiempo razonablemente necesario para atender la solicitud y cumplir obligaciones aplicables.</p><h2>Tus derechos</h2><p>Puedes solicitar acceso, rectificación, cancelación u oposición, así como revocar tu consentimiento, escribiendo a <a href="mailto:hola@tiey.cc">hola@tiey.cc</a>. Indicaremos cualquier actualización material de este aviso en esta página.</p></>:<><p>Al navegar en tiey.cc aceptas usar el sitio únicamente con fines lícitos. La información publicada es general y no constituye una oferta contractual.</p><h2>Servicios y contenidos</h2><p>El alcance, honorarios, tiempos, garantías y condiciones de cada servicio se establecerán por escrito con cada cliente. Las marcas, textos y elementos visuales del sitio pertenecen a Tiey o se utilizan con autorización.</p><h2>Disponibilidad y contacto</h2><p>Podemos actualizar o suspender contenidos del sitio. Para preguntas sobre estos términos, escribe a <a href="mailto:hola@tiey.cc">hola@tiey.cc</a>.</p></>}</article><Footer/></main>}
+function Thanks(){return <main className="concept human"><SetPageMeta title="Solicitud recibida — Tiey" description="Confirmación de solicitud enviada a Tiey." robots="noindex,nofollow"/><InnerHeader/><section className="status-page"><span className="eyebrow">SOLICITUD RECIBIDA</span><h1>Gracias por contarnos lo que necesitas.</h1><p>Revisaremos el contexto y te contactaremos en menos de 24 horas.</p><a className="primary" href="/">Volver al inicio <span>→</span></a></section><Footer/></main>}
+function NotFound(){return <main className="concept human"><SetPageMeta title="Página no encontrada — Tiey" description="La página solicitada no existe." robots="noindex,nofollow"/><InnerHeader/><section className="status-page"><span className="eyebrow">ERROR 404</span><h1>Esta página no existe.</h1><p>Regresa al inicio o cuéntanos qué necesitas resolver.</p><a className="primary" href="/">Volver al inicio <span>→</span></a></section><Footer/></main>}
 
 export default function App(){
   const n="3";
@@ -163,11 +135,8 @@ export default function App(){
   if(path!=="/") return <NotFound/>;
   useEffect(()=>{
     const sections=[...document.querySelectorAll(".section")];
-    const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{
-      if(entry.isIntersecting){entry.target.classList.add("is-visible");observer.unobserve(entry.target)}
-    }),{threshold:.13,rootMargin:"0px 0px -40px"});
-    sections.forEach(section=>observer.observe(section));
-    return()=>observer.disconnect();
+    const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add("is-visible");observer.unobserve(entry.target)}}),{threshold:.13,rootMargin:"0px 0px -40px"});
+    sections.forEach(section=>observer.observe(section));return()=>observer.disconnect();
   },[]);
   const c=concepts[n];
   return <main className={`concept ${c.className}`}><Header/><Hero variant={n}/><Services/><Audience/><Process/><Results variant={n}/><Difference variant={n}/><FAQ/><Contact/><Footer/></main>
