@@ -33,7 +33,7 @@ function Site(){
             <div>
               <small>RAIDAR</small>
               <a class="client-proof__logo-wrap" href="https://raidar.io/es" target="_blank" rel="noopener noreferrer" aria-label="Visitar sitio de Raidar">
-                <img class="client-proof__logo" src="/raidar-full-dark.webp" alt="Raidar" loading="lazy" />
+                <img class="client-proof__logo" src="/raidar-logo.png" alt="Raidar" loading="lazy" />
               </a>
             </div>
             <div><strong>03</strong><span>contrataciones</span></div>
