@@ -82,7 +82,7 @@ function Hero({ variant }) {
 function Services() {
   const [open,setOpen] = useState(0);
   return <section id="servicios" className="section services"><div className="section-head"><span className="eyebrow">SERVICIOS</span><h2>Búsquedas que generan <em>impacto real.</em></h2><p>Nos integramos a tu contexto para encontrar a quien puede acelerar la siguiente etapa.</p></div>
-    <div className="accordion">{services.map((s,i)=><button key={s[0]} onClick={()=>setOpen(i)} className={open===i?"open":""}><span className="num">0{i+1}</span><span className="service-copy"><strong>{s[0]}</strong><AnimatePresence initial={false}>{open===i&&<motion.small initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}}>{s[1]}</motion.small>}</AnimatePresence></span><span className="plus">{open===i?"−":"+"}</span></button>)}</div>
+    <div className="accordion">{services.map((s,i)=><button key={s[0]} onClick={()=>setOpen(i)} className={open===i?"open":""} aria-expanded={open===i}><span className="num">0{i+1}</span><span className="service-copy"><strong>{s[0]}</strong><AnimatePresence initial={false}>{open===i&&<motion.small initial={{height:0,opacity:0}} animate={{height:"auto",opacity:1}} exit={{height:0,opacity:0}}>{s[1]}</motion.small>}</AnimatePresence></span><span className="plus">{open===i?"−":"+"}</span></button>)}</div>
   </section>;
 }
 
@@ -94,7 +94,7 @@ function Results({variant}) { if(variant!=="3") return null; return <section cla
 
 function Difference({ variant }) { return <section id="diferencia" className="section difference">{variant === "3" && <img src="/p7.jpg" alt="Líder en contexto de trabajo"/>}<div className="difference-copy"><span className="eyebrow">NUESTRA DIFERENCIA</span><h2>No enviamos currículums.<br/><em>Construimos la búsqueda correcta.</em></h2><div className="manifesto"><div><b>Proceso a medida</b><p>Cada búsqueda comienza desde cero.</p></div><div><b>Evaluación humana</b><p>Entrevistas y revisión de contexto según el tipo de búsqueda.</p></div><div><b>Comunicación directa</b><p>Hablas con quien conduce la búsqueda.</p></div><div><b>Garantía</b><p>Se define de acuerdo con el servicio y alcance contratado.</p></div></div></div></section> }
 
-function FAQ() { const [open,setOpen]=useState(null); return <section id="faq" className="section faq"><div className="section-head"><span className="eyebrow">PREGUNTAS FRECUENTES</span><h2>Resolvemos tus dudas.</h2></div><div>{faqs.map((f,i)=><button key={f[0]} onClick={()=>setOpen(open===i?null:i)}><span>{f[0]}</span><b>{open===i?"−":"+"}</b>{open===i&&<motion.p initial={{opacity:0}} animate={{opacity:1}}>{f[1]}</motion.p>}</button>)}</div></section> }
+function FAQ() { const [open,setOpen]=useState(null); return <section id="faq" className="section faq"><div className="section-head"><span className="eyebrow">PREGUNTAS FRECUENTES</span><h2>Resolvemos tus dudas.</h2></div><div>{faqs.map((f,i)=><button key={f[0]} onClick={()=>setOpen(open===i?null:i)} aria-expanded={open===i}><span>{f[0]}</span><b>{open===i?"−":"+"}</b>{open===i&&<motion.p initial={{opacity:0}} animate={{opacity:1}}>{f[1]}</motion.p>}</button>)}</div></section> }
 
 function Contact() {
   const [status,setStatus]=useState("idle");

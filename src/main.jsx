@@ -39,7 +39,7 @@ function Site(){
             <div><strong>03</strong><span>contrataciones</span></div>
           </div>
           <div class="client-proof__story">
-            <h3>Tres áreas, tres perfiles distintos.</h3>
+            <h3>Distintas áreas, un mismo equipo.</h3>
             <p>Raidar confió en Tiey para sumar talento en diseño UX/UI, desarrollo mobile y administración.</p>
             <div class="client-proof__roles">
               <div><small>01 · DISEÑO</small><b>UX/UI Design</b></div>
