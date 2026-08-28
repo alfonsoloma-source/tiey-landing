@@ -3,6 +3,10 @@ const $=(id)=>document.getElementById(id);
 const sleep=(ms)=>new Promise(r=>setTimeout(r,ms));
 const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let motionRunning=false;
+
+// Static-page commercial CTAs should always lead to the working Tiey form.
+$$('a[href^="mailto:"]').forEach(a=>a.setAttribute('href','/#contacto'));
+
 async function playMotion(){
  if(motionRunning)return; motionRunning=true;
  const messages=$$('.msg'),fields=$$('.data'),times=$$('.timeline [data-time]');
