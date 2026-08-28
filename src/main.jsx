@@ -12,7 +12,9 @@ function Site(){
     training.href="/capacitacion/"; training.textContent="Capacitación"; training.dataset.tieyExtra="true";
     const ai=document.createElement("a");
     ai.href="/ia-recruiting/"; ai.textContent="IA Recruiting"; ai.dataset.tieyExtra="true";
-    nav.append(training,ai);
+    const tools=document.createElement("a");
+    tools.href="/herramientas/"; tools.textContent="Herramientas"; tools.dataset.tieyExtra="true";
+    nav.append(training,ai,tools);
   },[]);
   return <><App/><Analytics/></>;
 }
