@@ -25,28 +25,27 @@ function Site(){
       proof.setAttribute("aria-labelledby","client-proof-title");
       proof.innerHTML=`
         <div class="client-proof__head">
-          <span class="eyebrow">TRABAJO REAL · CLIENTE REAL</span>
-          <h2 id="client-proof-title">Talento para distintas áreas <em>de un mismo equipo.</em></h2>
+          <span class="eyebrow">CLIENTES</span>
+          <h2 id="client-proof-title">Búsquedas distintas para <em>un mismo equipo.</em></h2>
         </div>
         <div class="client-proof__case">
           <div class="client-proof__brand">
             <div>
-              <small>CASO 01 · RAIDAR</small>
+              <small>RAIDAR</small>
               <a class="client-proof__logo-wrap" href="https://raidar.io/es" target="_blank" rel="noopener noreferrer" aria-label="Visitar sitio de Raidar">
-                <img class="client-proof__logo" src="https://raidar.io/logos/raidar-full-dark.png" alt="Raidar" loading="lazy" />
+                <img class="client-proof__logo" src="https://raidar.io/_next/image?q=75&url=%2Flogos%2Fraidar-full-dark.png&w=384" alt="Raidar" loading="lazy" />
               </a>
             </div>
-            <div><strong>03</strong><span>posiciones cubiertas</span></div>
+            <div><strong>03</strong><span>contrataciones</span></div>
           </div>
           <div class="client-proof__story">
-            <h3>Tres búsquedas. Tres necesidades diferentes.</h3>
-            <p>Apoyamos a Raidar en la búsqueda y contratación de talento para diseño, tecnología y administración, cubriendo tres posiciones con perfiles y necesidades distintas.</p>
+            <h3>Tres áreas, tres perfiles distintos.</h3>
+            <p>Raidar confió en Tiey para sumar talento en diseño UX/UI, desarrollo mobile y administración.</p>
             <div class="client-proof__roles">
               <div><small>01 · DISEÑO</small><b>UX/UI Design</b></div>
               <div><small>02 · TECNOLOGÍA</small><b>Mobile Development</b></div>
               <div><small>03 · ADMINISTRACIÓN</small><b>Administración</b></div>
             </div>
-            <small class="client-proof__note">Nombre y logotipo publicados con autorización del cliente.</small>
           </div>
         </div>`;
       results.insertAdjacentElement("afterend",proof);
