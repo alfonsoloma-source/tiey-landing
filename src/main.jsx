@@ -17,6 +17,37 @@ function Site(){
       tools.href="/herramientas/"; tools.textContent="Herramientas"; tools.dataset.tieyExtra="true";
       nav.append(training,ai,tools);
     }
+
+    const results=document.querySelector(".results");
+    if(results && !document.querySelector(".client-proof")){
+      const proof=document.createElement("section");
+      proof.className="client-proof";
+      proof.setAttribute("aria-labelledby","client-proof-title");
+      proof.innerHTML=`
+        <div class="client-proof__head">
+          <span class="eyebrow">CASO DE CLIENTE</span>
+          <h2 id="client-proof-title">Una búsqueda no siempre es <em>un solo perfil.</em></h2>
+        </div>
+        <div class="client-proof__case">
+          <div class="client-proof__brand client-proof__brand--type">
+            <div>
+              <small>CLIENTE</small>
+              <a class="client-proof__wordmark" href="https://raidar.io/es" target="_blank" rel="noopener noreferrer" aria-label="Visitar sitio de Raidar">Raidar<span>↗</span></a>
+            </div>
+            <div><strong>03</strong><span>contrataciones</span></div>
+          </div>
+          <div class="client-proof__story">
+            <h3>Distintas áreas, un mismo equipo.</h3>
+            <p>Raidar confió en Tiey para sumar talento en diseño UX/UI, desarrollo mobile y administración.</p>
+            <div class="client-proof__roles">
+              <div><small>01 · DISEÑO</small><b>UX/UI Design</b></div>
+              <div><small>02 · TECNOLOGÍA</small><b>Mobile Development</b></div>
+              <div><small>03 · ADMINISTRACIÓN</small><b>Administración</b></div>
+            </div>
+          </div>
+        </div>`;
+      results.insertAdjacentElement("afterend",proof);
+    }
   },[]);
   return <><App/><Analytics/></>;
 }
