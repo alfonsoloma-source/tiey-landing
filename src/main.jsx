@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
+import posthog from "posthog-js";
 import App from "./App.jsx";
 import "./client-proof.css";
 import "./site-enhancements.css";
@@ -8,9 +9,35 @@ import "./signature-moments.css";
 import { initSiteEnhancements } from "./site-enhancements.js";
 import { initSignatureMoments } from "./signature-moments.js";
 
+const posthogKey=import.meta.env.VITE_POSTHOG_KEY;
+if(posthogKey){
+  posthog.init(posthogKey,{
+    api_host:import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
+    capture_pageview:true,
+    capture_pageleave:true,
+    autocapture:true,
+    person_profiles:"identified_only"
+  });
+  window.tieyTrack=(event,properties={})=>posthog.capture(event,properties);
+}
+
 function Site(){
   useEffect(()=>{
-    if(window.location.pathname !== "/") return;
+    const track=window.tieyTrack;
+    const clickHandler=e=>{
+      const link=e.target.closest("a");
+      if(!link||!track) return;
+      const href=link.getAttribute("href")||"";
+      if(href==="#contacto") track("contact_cta_clicked",{label:link.textContent?.trim(),path:window.location.pathname});
+      if(href.startsWith("mailto:")) track("email_cta_clicked",{path:window.location.pathname});
+      if(/wa\.me|whatsapp/i.test(href)) track("whatsapp_cta_clicked",{path:window.location.pathname});
+      if(href.includes("/ia-recruiting")) track("service_interest",{service:"ia_recruiting",path:window.location.pathname});
+      if(href.includes("/capacitacion")) track("service_interest",{service:"capacitacion",path:window.location.pathname});
+      if(href.includes("/reclutamiento-operativo")) track("service_interest",{service:"reclutamiento_operativo",path:window.location.pathname});
+    };
+    document.addEventListener("click",clickHandler);
+
+    if(window.location.pathname !== "/") return ()=>document.removeEventListener("click",clickHandler);
     const nav=document.querySelector("header.nav nav");
     if(nav && !nav.querySelector('[data-tiey-extra]')){
       const training=document.createElement("a");
@@ -55,7 +82,7 @@ function Site(){
 
     const cleanupEnhancements=initSiteEnhancements();
     const cleanupSignature=initSignatureMoments();
-    return ()=>{ cleanupSignature?.(); cleanupEnhancements?.(); };
+    return ()=>{ document.removeEventListener("click",clickHandler); cleanupSignature?.(); cleanupEnhancements?.(); };
   },[]);
   return <><App/><Analytics/></>;
 }
