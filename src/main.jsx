@@ -3,6 +3,8 @@ import ReactDOM from "react-dom/client";
 import { Analytics } from "@vercel/analytics/react";
 import App from "./App.jsx";
 import "./client-proof.css";
+import "./site-enhancements.css";
+import { initSiteEnhancements } from "./site-enhancements.js";
 
 function Site(){
   useEffect(()=>{
@@ -48,6 +50,8 @@ function Site(){
         </div>`;
       results.insertAdjacentElement("afterend",proof);
     }
+
+    return initSiteEnhancements();
   },[]);
   return <><App/><Analytics/></>;
 }
