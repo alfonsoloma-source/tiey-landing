@@ -107,11 +107,9 @@ function Contact() {
     const payload=Object.fromEntries(form.entries());
 
     if(payload.website){window.location.assign("/gracias");return;}
-    const accessKey=import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
-    if(!accessKey){setStatus("error");setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");return;}
     try{
-      const response=await fetch("https://api.web3forms.com/submit",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({access_key:accessKey,subject:`Nueva solicitud desde tiey.cc — ${payload.empresa || "Contacto"}`,from_name:"Tiey — Formulario web",name:payload.nombre,email:payload.email,empresa:payload.empresa,telefono:payload.telefono || "",puesto:payload.puesto,message:payload.mensaje || "Sin mensaje adicional",privacy_consent:payload.privacy_consent})});
-      const data=await response.json();
+      const response=await fetch("/api/contact",{method:"POST",headers:{"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({...payload,started_at:Date.now()})});
+      const data=await response.json().catch(()=>({success:false}));
       if(!response.ok||!data.success) throw new Error("submit");
       window.va?.("event",{name:"contact_form_success"});window.location.assign("/gracias");
     }catch{setStatus("error");setMessage("No pudimos enviar el formulario. Escríbenos a hola@tiey.cc.");}
