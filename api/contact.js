@@ -125,8 +125,27 @@ export default async function handler(req, res) {
       }),
     });
 
-    const result = await response.json();
-    if (!response.ok || !result.success) throw new Error("provider_error");
+    const providerContentType = String(response.headers.get("content-type") || "").toLowerCase();
+    let result = null;
+
+    if (providerContentType.includes("application/json")) {
+      result = await response.json();
+    } else {
+      await response.text();
+    }
+
+    if (!response.ok || !result?.success) {
+      console.error(JSON.stringify({
+        level: "error",
+        msg: "contact_provider_error",
+        route: "/api/contact",
+        requestId,
+        providerStatus: response.status,
+        providerContentType: providerContentType.slice(0, 120),
+        ms: Date.now() - start,
+      }));
+      return json(res, 502, { success: false });
+    }
 
     console.log(JSON.stringify({ level: "info", msg: "contact_done", route: "/api/contact", requestId, ms: Date.now() - start }));
     return json(res, 200, { success: true });
