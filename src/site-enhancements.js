@@ -47,31 +47,144 @@ function initMobileNavigation() {
     toggle.setAttribute("aria-label", "Cerrar menú");
   };
 
-  toggle.addEventListener("click", () => {
+  const onToggle = () => {
     const isOpen = header.classList.contains("mobile-nav-open");
     isOpen ? closeMenu() : openMenu();
     track("mobile_menu_toggle", { state: isOpen ? "closed" : "opened" });
-  });
-  nav.addEventListener("click", event => {
+  };
+  const onNavClick = event => {
     if (event.target.closest("a")) closeMenu();
-  });
+  };
   const onKeydown = event => {
     if (event.key === "Escape") closeMenu();
   };
   const onResize = () => {
     if (window.innerWidth > 760) closeMenu();
   };
+
+  toggle.addEventListener("click", onToggle);
+  nav.addEventListener("click", onNavClick);
   document.addEventListener("keydown", onKeydown);
   window.addEventListener("resize", onResize, { passive: true });
 
   return () => {
+    toggle.removeEventListener("click", onToggle);
+    nav.removeEventListener("click", onNavClick);
     document.removeEventListener("keydown", onKeydown);
     window.removeEventListener("resize", onResize);
   };
 }
 
+function initPremiumMotion() {
+  const mediaFine = window.matchMedia("(pointer:fine) and (hover:hover)");
+  const mediaReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const cleanups = [];
+
+  const header = document.querySelector("header.nav");
+  const onScrollState = () => header?.classList.toggle("nav-scrolled", window.scrollY > 28);
+  window.addEventListener("scroll", onScrollState, { passive: true });
+  onScrollState();
+  cleanups.push(() => window.removeEventListener("scroll", onScrollState));
+
+  const revealTargets = [
+    ".section .section-head",
+    ".section .columns > *",
+    ".section .timeline > *",
+    ".section .result-intro",
+    ".section .result-metrics > *",
+    ".section .difference-copy",
+    ".section .manifesto > *",
+    ".section.faq > div > button",
+    ".client-proof > *",
+    ".contact > *",
+  ];
+  const revealNodes = [...document.querySelectorAll(revealTargets.join(","))];
+  revealNodes.forEach((node, index) => {
+    node.classList.add("premium-reveal");
+    node.style.setProperty("--reveal-delay", `${Math.min(index % 5, 4) * 55}ms`);
+  });
+
+  if ("IntersectionObserver" in window && !mediaReduced.matches) {
+    const revealObserver = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-revealed");
+        revealObserver.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -7%" });
+    revealNodes.forEach(node => revealObserver.observe(node));
+    cleanups.push(() => revealObserver.disconnect());
+  } else {
+    revealNodes.forEach(node => node.classList.add("is-revealed"));
+  }
+
+  if (mediaFine.matches && !mediaReduced.matches) {
+    const glow = document.createElement("div");
+    glow.className = "premium-cursor-glow";
+    glow.setAttribute("aria-hidden", "true");
+    document.body.appendChild(glow);
+
+    let glowX = -200;
+    let glowY = -200;
+    let frame = 0;
+    const renderGlow = () => {
+      glow.style.transform = `translate3d(${glowX}px,${glowY}px,0)`;
+      frame = 0;
+    };
+    const onPointerMove = event => {
+      glowX = event.clientX - 210;
+      glowY = event.clientY - 210;
+      if (!frame) frame = requestAnimationFrame(renderGlow);
+    };
+    document.addEventListener("pointermove", onPointerMove, { passive: true });
+    cleanups.push(() => {
+      document.removeEventListener("pointermove", onPointerMove);
+      if (frame) cancelAnimationFrame(frame);
+      glow.remove();
+    });
+
+    const magneticNodes = [...document.querySelectorAll(".primary,.nav-cta")];
+    magneticNodes.forEach(node => {
+      const onMove = event => {
+        const rect = node.getBoundingClientRect();
+        const x = (event.clientX - rect.left - rect.width / 2) * 0.12;
+        const y = (event.clientY - rect.top - rect.height / 2) * 0.18;
+        node.style.setProperty("--mag-x", `${x.toFixed(2)}px`);
+        node.style.setProperty("--mag-y", `${y.toFixed(2)}px`);
+      };
+      const onLeave = () => {
+        node.style.setProperty("--mag-x", "0px");
+        node.style.setProperty("--mag-y", "0px");
+      };
+      node.addEventListener("pointermove", onMove);
+      node.addEventListener("pointerleave", onLeave);
+      cleanups.push(() => {
+        node.removeEventListener("pointermove", onMove);
+        node.removeEventListener("pointerleave", onLeave);
+      });
+    });
+
+    const spotlightNodes = [...document.querySelectorAll(".columns article,.timeline article,.result-metrics article,.manifesto > div,.accordion button,.client-proof")];
+    spotlightNodes.forEach(node => {
+      node.classList.add("premium-spotlight");
+      const onMove = event => {
+        const rect = node.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        node.style.setProperty("--spot-x", `${x.toFixed(1)}%`);
+        node.style.setProperty("--spot-y", `${y.toFixed(1)}%`);
+      };
+      node.addEventListener("pointermove", onMove);
+      cleanups.push(() => node.removeEventListener("pointermove", onMove));
+    });
+  }
+
+  return () => cleanups.forEach(fn => fn());
+}
+
 export function initSiteEnhancements() {
   const cleanupMobileNav = initMobileNavigation();
+  const cleanupPremiumMotion = initPremiumMotion();
 
   const onDocumentClick = event => {
     const anchor = event.target.closest?.("a[href]");
@@ -128,6 +241,7 @@ export function initSiteEnhancements() {
 
   return () => {
     cleanupMobileNav();
+    cleanupPremiumMotion();
     document.removeEventListener("click", onDocumentClick);
     window.removeEventListener("scroll", onScroll);
     if (form) {
