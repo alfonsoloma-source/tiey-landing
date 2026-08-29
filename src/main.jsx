@@ -4,7 +4,9 @@ import { Analytics } from "@vercel/analytics/react";
 import App from "./App.jsx";
 import "./client-proof.css";
 import "./site-enhancements.css";
+import "./signature-moments.css";
 import { initSiteEnhancements } from "./site-enhancements.js";
+import { initSignatureMoments } from "./signature-moments.js";
 
 function Site(){
   useEffect(()=>{
@@ -51,7 +53,9 @@ function Site(){
       results.insertAdjacentElement("afterend",proof);
     }
 
-    return initSiteEnhancements();
+    const cleanupEnhancements=initSiteEnhancements();
+    const cleanupSignature=initSignatureMoments();
+    return ()=>{ cleanupSignature?.(); cleanupEnhancements?.(); };
   },[]);
   return <><App/><Analytics/></>;
 }
