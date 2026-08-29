@@ -21,8 +21,59 @@ function classifyLink(anchor) {
   return "internal";
 }
 
+function initMobileNavigation() {
+  const header = document.querySelector("header.nav");
+  const nav = header?.querySelector("nav");
+  if (!header || !nav || header.querySelector(".mobile-nav-toggle")) return () => {};
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "mobile-nav-toggle";
+  toggle.setAttribute("aria-label", "Abrir menú");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.innerHTML = '<span></span><span></span>';
+  header.insertBefore(toggle, header.querySelector(".nav-cta"));
+
+  const closeMenu = () => {
+    header.classList.remove("mobile-nav-open");
+    document.body.classList.remove("mobile-nav-lock");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Abrir menú");
+  };
+  const openMenu = () => {
+    header.classList.add("mobile-nav-open");
+    document.body.classList.add("mobile-nav-lock");
+    toggle.setAttribute("aria-expanded", "true");
+    toggle.setAttribute("aria-label", "Cerrar menú");
+  };
+
+  toggle.addEventListener("click", () => {
+    const isOpen = header.classList.contains("mobile-nav-open");
+    isOpen ? closeMenu() : openMenu();
+    track("mobile_menu_toggle", { state: isOpen ? "closed" : "opened" });
+  });
+  nav.addEventListener("click", event => {
+    if (event.target.closest("a")) closeMenu();
+  });
+  const onKeydown = event => {
+    if (event.key === "Escape") closeMenu();
+  };
+  const onResize = () => {
+    if (window.innerWidth > 760) closeMenu();
+  };
+  document.addEventListener("keydown", onKeydown);
+  window.addEventListener("resize", onResize, { passive: true });
+
+  return () => {
+    document.removeEventListener("keydown", onKeydown);
+    window.removeEventListener("resize", onResize);
+  };
+}
+
 export function initSiteEnhancements() {
-  document.addEventListener("click", event => {
+  const cleanupMobileNav = initMobileNavigation();
+
+  const onDocumentClick = event => {
     const anchor = event.target.closest?.("a[href]");
     if (!anchor) return;
     const href = anchor.getAttribute("href") || "";
@@ -32,29 +83,31 @@ export function initSiteEnhancements() {
       destination: href.slice(0, 180),
       page: window.location.pathname,
     });
-  });
+  };
+  document.addEventListener("click", onDocumentClick);
 
   const form = document.querySelector("#contacto form");
-  if (form) {
-    form.addEventListener("focusin", () => {
-      if (startedForm) return;
-      startedForm = true;
-      track("contact_form_start", { page: window.location.pathname });
+  const onFormFocus = () => {
+    if (startedForm) return;
+    startedForm = true;
+    track("contact_form_start", { page: window.location.pathname });
+  };
+  const onFormSubmit = () => {
+    track("contact_form_submit", { page: window.location.pathname });
+  };
+  const onFormInvalid = event => {
+    if (invalidTracked) return;
+    invalidTracked = true;
+    track("contact_form_validation_error", {
+      field: event.target?.name || "unknown",
+      page: window.location.pathname,
     });
-
-    form.addEventListener("submit", () => {
-      track("contact_form_submit", { page: window.location.pathname });
-    }, { capture: true });
-
-    form.addEventListener("invalid", event => {
-      if (invalidTracked) return;
-      invalidTracked = true;
-      track("contact_form_validation_error", {
-        field: event.target?.name || "unknown",
-        page: window.location.pathname,
-      });
-      window.setTimeout(() => { invalidTracked = false; }, 1500);
-    }, true);
+    window.setTimeout(() => { invalidTracked = false; }, 1500);
+  };
+  if (form) {
+    form.addEventListener("focusin", onFormFocus);
+    form.addEventListener("submit", onFormSubmit, { capture: true });
+    form.addEventListener("invalid", onFormInvalid, true);
   }
 
   const onScroll = () => {
@@ -73,5 +126,14 @@ export function initSiteEnhancements() {
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 
-  return () => window.removeEventListener("scroll", onScroll);
+  return () => {
+    cleanupMobileNav();
+    document.removeEventListener("click", onDocumentClick);
+    window.removeEventListener("scroll", onScroll);
+    if (form) {
+      form.removeEventListener("focusin", onFormFocus);
+      form.removeEventListener("submit", onFormSubmit, { capture: true });
+      form.removeEventListener("invalid", onFormInvalid, true);
+    }
+  };
 }
