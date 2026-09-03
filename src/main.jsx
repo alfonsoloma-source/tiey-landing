@@ -45,7 +45,7 @@ function Site(){
       const specialties=document.createElement("a");
       specialties.href="#especialidades"; specialties.textContent="Especialidades"; specialties.dataset.tieyExtra="true";
       const resources=document.createElement("a");
-      resources.href="/recursos/cuanto-cuesta-agencia-reclutamiento-mexico/"; resources.textContent="Recursos"; resources.dataset.tieyExtra="true";
+      resources.href="/cuanto-cuesta-agencia-reclutamiento-mexico/"; resources.textContent="Recursos"; resources.dataset.tieyExtra="true";
       nav.append(specialties,resources);
     }
 
@@ -113,7 +113,7 @@ function Site(){
         ["Producto & UX/UI","/reclutamiento-producto-ux-diseno/"],
         ["Headhunter Monterrey","/headhunter-monterrey/"],
         ["Agencia Monterrey","/agencia-reclutamiento-monterrey/"],
-        ["Recursos","/recursos/cuanto-cuesta-agencia-reclutamiento-mexico/"]
+        ["Recursos","/cuanto-cuesta-agencia-reclutamiento-mexico/"]
       ];
       links.forEach(([label,href])=>{const a=document.createElement("a");a.href=href;a.textContent=label;a.dataset.seoFooter="true";footerLinks.append(a);});
     }
