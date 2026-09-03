@@ -7,8 +7,10 @@ import "./client-proof.css";
 import "./site-enhancements.css";
 import "./signature-moments.css";
 import "./seo-navigation.css";
+import "./commercial-services.css";
 import { initSiteEnhancements } from "./site-enhancements.js";
 import { initSignatureMoments } from "./signature-moments.js";
+import { mountCommercialServices } from "./commercial-services.js";
 
 const posthogKey=import.meta.env.VITE_POSTHOG_KEY || "phc_rcUiz2YndQJ3TphNiPjGCTqCt4PXde45o6sMsiayfBBW";
 posthog.init(posthogKey,{
@@ -69,6 +71,8 @@ function Site(){
         </div>`;
       services.insertAdjacentElement("afterend",specialties);
     }
+
+    mountCommercialServices();
 
     const results=document.querySelector(".results");
     if(results && !document.querySelector(".client-proof")){
