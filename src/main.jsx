@@ -6,6 +6,7 @@ import App from "./App.jsx";
 import "./client-proof.css";
 import "./site-enhancements.css";
 import "./signature-moments.css";
+import "./seo-navigation.css";
 import { initSiteEnhancements } from "./site-enhancements.js";
 import { initSignatureMoments } from "./signature-moments.js";
 
@@ -34,19 +35,41 @@ function Site(){
       if(href.includes("/ia-recruiting")) track("service_interest",{service:"ia_recruiting",path:window.location.pathname});
       if(href.includes("/capacitacion")) track("service_interest",{service:"capacitacion",path:window.location.pathname});
       if(href.includes("/reclutamiento-operativo")) track("service_interest",{service:"reclutamiento_operativo",path:window.location.pathname});
+      if(href.includes("/reclutamiento-")||href.includes("/headhunter-")) track("specialty_interest",{destination:href,path:window.location.pathname});
     };
     document.addEventListener("click",clickHandler);
 
     if(window.location.pathname !== "/") return ()=>document.removeEventListener("click",clickHandler);
     const nav=document.querySelector("header.nav nav");
     if(nav && !nav.querySelector('[data-tiey-extra]')){
-      const training=document.createElement("a");
-      training.href="/capacitacion/"; training.textContent="Capacitación"; training.dataset.tieyExtra="true";
-      const ai=document.createElement("a");
-      ai.href="/ia-recruiting/"; ai.textContent="IA Recruiting"; ai.dataset.tieyExtra="true";
-      const tools=document.createElement("a");
-      tools.href="/herramientas/"; tools.textContent="Herramientas"; tools.dataset.tieyExtra="true";
-      nav.append(training,ai,tools);
+      const specialties=document.createElement("a");
+      specialties.href="#especialidades"; specialties.textContent="Especialidades"; specialties.dataset.tieyExtra="true";
+      const resources=document.createElement("a");
+      resources.href="/recursos/cuanto-cuesta-agencia-reclutamiento-mexico/"; resources.textContent="Recursos"; resources.dataset.tieyExtra="true";
+      nav.append(specialties,resources);
+    }
+
+    const services=document.querySelector("#servicios");
+    if(services && !document.querySelector("#especialidades")){
+      const specialties=document.createElement("section");
+      specialties.id="especialidades";
+      specialties.className="seo-specialties";
+      specialties.setAttribute("aria-labelledby","seo-specialties-title");
+      specialties.innerHTML=`
+        <div class="seo-specialties__head">
+          <span class="eyebrow">ESPECIALIDADES</span>
+          <h2 id="seo-specialties-title">Búsqueda especializada por <em>tipo de talento.</em></h2>
+          <p>Cada mercado de talento se mueve distinto. Trabajamos búsquedas enfocadas por especialidad, contexto y nivel de la posición.</p>
+        </div>
+        <div class="seo-specialties__grid">
+          <a href="/reclutamiento-tecnologia-it/"><span>Tecnología & IT</span><span>→</span></a>
+          <a href="/reclutamiento-ingenieros/"><span>Ingeniería</span><span>→</span></a>
+          <a href="/reclutamiento-marketing/"><span>Marketing</span><span>→</span></a>
+          <a href="/reclutamiento-producto-ux-diseno/"><span>Producto, UX/UI & Diseño</span><span>→</span></a>
+          <a href="/headhunter-monterrey/"><span>Headhunting</span><span>→</span></a>
+          <a href="/reclutamiento-especializado/"><span>Reclutamiento especializado</span><span>→</span></a>
+        </div>`;
+      services.insertAdjacentElement("afterend",specialties);
     }
 
     const results=document.querySelector(".results");
@@ -78,6 +101,21 @@ function Site(){
           </div>
         </div>`;
       results.insertAdjacentElement("afterend",proof);
+    }
+
+    const footerLinks=document.querySelector("footer div");
+    if(footerLinks && !footerLinks.querySelector('[data-seo-footer]')){
+      const links=[
+        ["Especializado","/reclutamiento-especializado/"],
+        ["Tecnología & IT","/reclutamiento-tecnologia-it/"],
+        ["Ingeniería","/reclutamiento-ingenieros/"],
+        ["Marketing","/reclutamiento-marketing/"],
+        ["Producto & UX/UI","/reclutamiento-producto-ux-diseno/"],
+        ["Headhunter Monterrey","/headhunter-monterrey/"],
+        ["Agencia Monterrey","/agencia-reclutamiento-monterrey/"],
+        ["Recursos","/recursos/cuanto-cuesta-agencia-reclutamiento-mexico/"]
+      ];
+      links.forEach(([label,href])=>{const a=document.createElement("a");a.href=href;a.textContent=label;a.dataset.seoFooter="true";footerLinks.append(a);});
     }
 
     const cleanupEnhancements=initSiteEnhancements();
