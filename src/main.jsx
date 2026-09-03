@@ -10,17 +10,15 @@ import "./seo-navigation.css";
 import { initSiteEnhancements } from "./site-enhancements.js";
 import { initSignatureMoments } from "./signature-moments.js";
 
-const posthogKey=import.meta.env.VITE_POSTHOG_KEY;
-if(posthogKey){
-  posthog.init(posthogKey,{
-    api_host:import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
-    capture_pageview:true,
-    capture_pageleave:true,
-    autocapture:true,
-    person_profiles:"identified_only"
-  });
-  window.tieyTrack=(event,properties={})=>posthog.capture(event,properties);
-}
+const posthogKey=import.meta.env.VITE_POSTHOG_KEY || "phc_rcUiz2YndQJ3TphNiPjGCTqCt4PXde45o6sMsiayfBBW";
+posthog.init(posthogKey,{
+  api_host:import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
+  capture_pageview:true,
+  capture_pageleave:true,
+  autocapture:true,
+  person_profiles:"identified_only"
+});
+window.tieyTrack=(event,properties={})=>posthog.capture(event,properties);
 
 function Site(){
   useEffect(()=>{
