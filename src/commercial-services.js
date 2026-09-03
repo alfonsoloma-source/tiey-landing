@@ -1,4 +1,4 @@
-function mountCommercialServices(){
+export function mountCommercialServices(){
   if(window.location.pathname!=="/" || document.querySelector("#soluciones-tiey")) return;
   const services=document.querySelector("#servicios");
   if(!services) return;
@@ -20,6 +20,3 @@ function mountCommercialServices(){
     </div>`;
   services.insertAdjacentElement("afterend",section);
 }
-
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",()=>setTimeout(mountCommercialServices,0));
-else setTimeout(mountCommercialServices,0);
