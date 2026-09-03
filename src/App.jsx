@@ -86,6 +86,22 @@ function Services() {
   </section>;
 }
 
+function CommercialServices(){
+  return <section id="soluciones-tiey" className="commercial-services" aria-labelledby="commercial-services-title">
+    <div className="commercial-services__head">
+      <span className="eyebrow">SOLUCIONES TIEY</span>
+      <h2 id="commercial-services-title">Distintos retos de talento. <em>Una solución para cada contexto.</em></h2>
+      <p>Desde posiciones especializadas hasta contratación operativa, capacitación y tecnología aplicada al reclutamiento.</p>
+    </div>
+    <div className="commercial-services__grid">
+      <a href="/reclutamiento-especializado/"><small>01</small><strong>Reclutamiento especializado</strong><span>Búsqueda activa para posiciones profesionales, críticas y de liderazgo.</span><b>→</b></a>
+      <a href="/reclutamiento-operativo/"><small>02</small><strong>Reclutamiento operativo y volumen</strong><span>Procesos para operadores, almacén, ayudantes y necesidades de contratación recurrente.</span><b>→</b></a>
+      <a href="/ia-recruiting/"><small>03</small><strong>IA Recruiting</strong><span>Automatización y tecnología aplicada a procesos repetitivos de reclutamiento operativo.</span><b>→</b></a>
+      <a href="/capacitacion/"><small>04</small><strong>Capacitación</strong><span>Formación práctica para fortalecer procesos, equipos y capacidades de talento.</span><b>→</b></a>
+    </div>
+  </section>;
+}
+
 function Audience() { return <section className="section audience"><div className="section-head"><span className="eyebrow">PARA QUIÉN TRABAJAMOS</span><h2>Cuando una contratación genérica <em>ya no es suficiente.</em></h2></div><div className="columns">{audiences.map((a,i)=><motion.article key={a[0]} whileHover={{y:-6}}><span>0{i+1}</span><h3>{a[0]}</h3><p>{a[1]}</p></motion.article>)}</div></section> }
 
 function Process() { return <section id="proceso" className="section process"><div className="section-head"><span className="eyebrow">NUESTRO PROCESO</span><h2>Un proceso claro. <em>Resultados que se quedan.</em></h2></div><div className="timeline">{steps.map((s,i)=><motion.article key={s[0]} initial={{opacity:.45}} whileInView={{opacity:1}} whileHover={{y:-9}} transition={{duration:.3,ease:[.22,1,.36,1]}} viewport={{once:true,amount:.8}}><span>0{i+1}</span><h3>{s[0]}</h3><p>{s[1]}</p></motion.article>)}</div></section> }
@@ -139,5 +155,5 @@ export default function App(){
     sections.forEach(section=>observer.observe(section));return()=>observer.disconnect();
   },[]);
   const c=concepts[n];
-  return <main className={`concept ${c.className}`}><Header/><Hero variant={n}/><Services/><Audience/><Process/><Results variant={n}/><Difference variant={n}/><FAQ/><Contact/><Footer/></main>
+  return <main className={`concept ${c.className}`}><Header/><Hero variant={n}/><Services/><CommercialServices/><Audience/><Process/><Results variant={n}/><Difference variant={n}/><FAQ/><Contact/><Footer/></main>
 }
