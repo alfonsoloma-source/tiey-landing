@@ -32,7 +32,9 @@ function initMobileNavigation() {
   toggle.setAttribute("aria-label", "Abrir menú");
   toggle.setAttribute("aria-expanded", "false");
   toggle.innerHTML = '<span></span><span></span>';
-  header.insertBefore(toggle, header.querySelector(".nav-cta"));
+  const navActions = header.querySelector(".nav-actions");
+  if (navActions) header.insertBefore(toggle, navActions);
+  else header.appendChild(toggle);
 
   const closeMenu = () => {
     header.classList.remove("mobile-nav-open");
