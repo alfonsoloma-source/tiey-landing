@@ -13,6 +13,7 @@ import { initSignatureMoments } from "./signature-moments.js";
 import { mountCommercialServices } from "./commercial-services.js";
 
 const posthogKey=import.meta.env.VITE_POSTHOG_KEY || "phc_rcUiz2YndQJ3TphNiPjGCTqCt4PXde45o6sMsiayfBBW";
+if(window.location.pathname==="/"&&localStorage.getItem("tiey-language")==="en") window.history.replaceState({},"","/en");
 posthog.init(posthogKey,{
   api_host:import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com",
   capture_pageview:true,
